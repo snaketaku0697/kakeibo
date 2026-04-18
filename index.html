@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>家計簿</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<header>
+  <h1>家計簿</h1>
+  <div class="month-nav">
+    <button onclick="changeMonth(-1)">&lt;</button>
+    <span class="month-label" id="month-label"></span>
+    <button onclick="changeMonth(1)">&gt;</button>
+  </div>
+</header>
+
+<!-- サマリー -->
+<div class="summary">
+  <div class="summary-card">
+    <div class="label">収入</div>
+    <div class="amount income" id="sum-income">0</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">支出</div>
+    <div class="amount expense" id="sum-expense">0</div>
+  </div>
+  <div class="summary-card">
+    <div class="label">収支</div>
+    <div class="amount balance" id="sum-balance">0</div>
+  </div>
+</div>
+
+<!-- ===== ホームページ ===== -->
+<div class="container">
+  <div class="page active" id="page-home">
+    <div class="card">
+      <h2>最近の記録</h2>
+      <ul class="tx-list" id="recent-list">
+        <li class="empty-state"><div class="icon">📝</div><p>まだ記録がありません</p></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== 履歴ページ ===== -->
+  <div class="page" id="page-history">
+    <div class="card">
+      <h2>取引履歴</h2>
+      <ul class="tx-list" id="history-list"></ul>
+    </div>
+  </div>
+
+  <!-- ===== グラフページ ===== -->
+  <div class="page" id="page-chart">
+    <div class="card">
+      <h2>カテゴリ別支出</h2>
+      <div class="chart-container">
+        <canvas id="category-chart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h2>月別推移</h2>
+      <div class="chart-container">
+        <canvas id="monthly-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 設定ページ ===== -->
+  <div class="page" id="page-settings">
+    <div class="card">
+      <h2>クラウド同期（夫婦共有）</h2>
+      <div id="cloud-status" style="margin-bottom:12px"></div>
+      <div class="form-group">
+        <label>Google Apps Script URL</label>
+        <input type="text" id="gas-url" placeholder="https://script.google.com/macros/s/..." onchange="saveGasUrl()">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-primary" onclick="cloudSync()">同期する</button>
+        <p style="font-size:0.75rem;color:var(--text-sub)">設定方法: スプレッドシートを作成 → 拡張機能 → Apps Script → コードを貼り付け → デプロイ</p>
+      </div>
+    </div>
+    <div class="card">
+      <h2>データ管理</h2>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-secondary" onclick="exportData()">データをエクスポート (JSON)</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">データをインポート</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+        <button class="btn btn-secondary" onclick="exportCSV()">CSV出力</button>
+        <button class="btn" style="background:#d63031;color:white;margin-top:12px" onclick="clearAllData()">全データ削除</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 入力モーダル -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">記録を追加</h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+
+    <!-- 支出/収入切替 -->
+    <div class="type-tabs">
+      <button class="type-tab active-expense" id="tab-expense" onclick="switchType('expense')">支出</button>
+      <button class="type-tab" id="tab-income" onclick="switchType('income')">収入</button>
+    </div>
+
+    <!-- レシート撮影エリア（支出時のみ） -->
+    <div id="receipt-section">
+      <div class="form-group">
+        <label>レシート読み取り（任意）</label>
+        <div class="receipt-area" id="receipt-area" onclick="captureReceipt()">
+          <div class="placeholder" id="receipt-placeholder">
+            <div class="cam-icon">📷</div>
+            <div>タップしてレシートを撮影</div>
+          </div>
+        </div>
+        <input type="file" id="receipt-input" accept="image/*" capture="environment" style="display:none" onchange="onReceiptCaptured(event)">
+        <div id="ocr-status"></div>
+      </div>
+    </div>
+
+    <!-- 金額 -->
+    <div class="form-group">
+      <label>金額 (円)</label>
+      <input type="number" id="input-amount" placeholder="0" inputmode="numeric">
+    </div>
+
+    <!-- 支払方法（支出時のみ） -->
+    <div id="payment-section">
+      <div class="form-group">
+        <label>支払方法</label>
+        <div class="type-tabs" id="payment-tabs">
+          <button class="type-tab active-expense" id="pay-cash" onclick="selectPayment('cash')">💴 現金</button>
+          <button class="type-tab" id="pay-credit" onclick="selectPayment('credit')">💳 クレジット</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 購入場所（支出時のみ） -->
+    <div id="shop-section">
+      <div class="form-group">
+        <label>購入場所</label>
+        <input type="text" id="input-shop" placeholder="店名を入力" list="shop-list" autocomplete="off">
+        <datalist id="shop-list"></datalist>
+        <div class="shop-history" id="shop-history"></div>
+      </div>
+    </div>
+
+    <!-- カテゴリ（支出） -->
+    <div id="expense-categories">
+      <div class="form-group">
+        <label>カテゴリ</label>
+        <div class="category-grid" id="cat-grid"></div>
+      </div>
+    </div>
+
+    <!-- カテゴリ（収入） -->
+    <div id="income-categories" style="display:none">
+      <div class="form-group">
+        <label>カテゴリ</label>
+        <div class="category-grid" id="income-cat-grid"></div>
+      </div>
+    </div>
+
+    <!-- 日付 -->
+    <div class="form-group">
+      <label>日付</label>
+      <input type="date" id="input-date">
+    </div>
+
+    <!-- メモ -->
+    <div class="form-group">
+      <label>メモ（任意）</label>
+      <input type="text" id="input-memo" placeholder="メモを入力">
+    </div>
+
+    <!-- 保存ボタン -->
+    <button class="btn btn-expense" id="save-btn" onclick="saveEntry()">支出を記録</button>
+  </div>
+</div>
+
+<!-- ボトムナビ -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-page="home" onclick="showPage('home')">
+    <span class="nav-icon">🏠</span>
+    <span>ホーム</span>
+  </button>
+  <button class="nav-btn" data-page="history" onclick="showPage('history')">
+    <span class="nav-icon">📋</span>
+    <span>履歴</span>
+  </button>
+  <button class="nav-btn add-btn" onclick="openModal()">
+    <span class="nav-icon">+</span>
+    <span>追加</span>
+  </button>
+  <button class="nav-btn" data-page="chart" onclick="showPage('chart')">
+    <span class="nav-icon">📊</span>
+    <span>グラフ</span>
+  </button>
+  <button class="nav-btn" data-page="settings" onclick="showPage('settings')">
+    <span class="nav-icon">⚙️</span>
+    <span>設定</span>
+  </button>
+</nav>
+
+<script src="js/app.js"></script>
+</body>
+</html>
