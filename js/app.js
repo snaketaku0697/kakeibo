@@ -93,6 +93,8 @@ function updateView() {
   document.getElementById('month-label').textContent = `${y}年${m}月`;
   updateSummary();
   renderRecent();
+  renderHistory();
+  renderCharts();
 }
 
 // ---- サマリー更新 ----
