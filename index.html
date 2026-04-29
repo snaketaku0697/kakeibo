@@ -40,6 +40,9 @@
 <!-- ===== ホームページ ===== -->
 <div class="container">
   <div class="page active" id="page-home">
+    <button class="btn btn-secondary" onclick="exportCSV()" style="margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px">
+      📊 Excelに保存（バックアップ）
+    </button>
     <div class="card">
       <h2>最近の記録</h2>
       <ul class="tx-list" id="recent-list">
@@ -60,15 +63,53 @@
   <div class="page" id="page-chart">
     <div class="card">
       <h2>カテゴリ別支出</h2>
+      <p style="font-size:0.75rem;color:var(--text-sub);margin-bottom:8px">項目をタップで詳細表示</p>
       <div class="chart-container">
         <canvas id="category-chart"></canvas>
       </div>
+      <div id="category-detail"></div>
+    </div>
+    <div class="card">
+      <h2>支払方法別</h2>
+      <p style="font-size:0.75rem;color:var(--text-sub);margin-bottom:8px">項目をタップで詳細表示</p>
+      <div style="display:flex;gap:16px;margin-bottom:8px">
+        <div id="payment-summary-cash" style="flex:1;text-align:center;padding:10px;background:var(--bg);border-radius:8px;cursor:pointer" onclick="showPaymentDetail('cash')">
+          <div style="font-size:0.75rem;color:var(--text-sub)">💴 現金</div>
+          <div style="font-weight:700;font-size:1.1rem;color:var(--expense)">¥0</div>
+        </div>
+        <div id="payment-summary-credit" style="flex:1;text-align:center;padding:10px;background:var(--bg);border-radius:8px;cursor:pointer" onclick="showPaymentDetail('credit')">
+          <div style="font-size:0.75rem;color:var(--text-sub)">💳 クレジット</div>
+          <div style="font-weight:700;font-size:1.1rem;color:var(--expense)">¥0</div>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="payment-chart"></canvas>
+      </div>
+      <div id="payment-detail"></div>
+    </div>
+    <div class="card">
+      <h2>購入場所別</h2>
+      <p style="font-size:0.75rem;color:var(--text-sub);margin-bottom:8px">項目をタップで詳細表示</p>
+      <div class="chart-container">
+        <canvas id="shop-chart"></canvas>
+      </div>
+      <div id="shop-detail"></div>
+    </div>
+    <div class="card">
+      <h2>日別支出</h2>
+      <p style="font-size:0.75rem;color:var(--text-sub);margin-bottom:8px">バーをタップで詳細表示</p>
+      <div class="chart-container">
+        <canvas id="daily-chart"></canvas>
+      </div>
+      <div id="daily-detail"></div>
     </div>
     <div class="card">
       <h2>月別推移</h2>
+      <p style="font-size:0.75rem;color:var(--text-sub);margin-bottom:8px">バーをタップで詳細表示</p>
       <div class="chart-container">
         <canvas id="monthly-chart"></canvas>
       </div>
+      <div id="monthly-detail"></div>
     </div>
   </div>
 

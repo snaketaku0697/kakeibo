@@ -445,6 +445,49 @@ header .month-label {
 .type-tab.active-expense { background: var(--expense); color: white; }
 .type-tab.active-income { background: var(--income); color: white; }
 
+/* ---- カテゴリ詳細 ---- */
+.cat-detail {
+  margin-top: 12px;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 12px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cat-detail-header {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cat-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.cat-detail-item:last-child { border-bottom: none; }
+
+.cat-detail-item .detail-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cat-detail-item .detail-memo { font-size: 0.75rem; color: var(--text-sub); }
+.cat-detail-item .detail-amount { font-weight: 700; color: var(--expense); }
+
 /* ---- 購入場所履歴 ---- */
 .shop-history {
   display: flex;

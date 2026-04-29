@@ -46,6 +46,9 @@ let currentType = 'expense';
 let selectedCategory = '';
 let selectedPayment = 'cash';
 let categoryChart = null;
+let paymentChart = null;
+let shopChart = null;
+let dailyChart = null;
 let monthlyChart = null;
 
 // ---- 初期化 ----
@@ -142,6 +145,7 @@ function selectCategory(id) {
 
 // ---- モーダル ----
 function openModal() {
+  editingId = null;
   document.getElementById('add-modal').classList.add('active');
   switchType('expense');
   setDefaultDate();
@@ -153,6 +157,8 @@ function openModal() {
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
   clearReceiptPreview();
   renderShopHistory();
+  document.getElementById('modal-title').textContent = '記録を追加';
+  document.getElementById('save-btn').textContent = '支出を記録';
 }
 
 function closeModal() {
@@ -230,22 +236,73 @@ function saveEntry() {
   if (!amount || amount <= 0) { alert('金額を入力してください'); return; }
   if (!selectedCategory) { alert('カテゴリを選択してください'); return; }
 
-  const entry = {
-    id: Date.now(),
-    type: currentType,
-    amount: amount,
-    category: selectedCategory,
-    payment: currentType === 'expense' ? selectedPayment : null,
-    shop: currentType === 'expense' ? document.getElementById('input-shop').value.trim() : '',
-    date: document.getElementById('input-date').value,
-    memo: document.getElementById('input-memo').value,
-    created: new Date().toISOString(),
-  };
-
-  entries.push(entry);
+  if (editingId) {
+    // 既存エントリを更新
+    const idx = entries.findIndex(e => e.id === editingId);
+    if (idx !== -1) {
+      entries[idx].type = currentType;
+      entries[idx].amount = amount;
+      entries[idx].category = selectedCategory;
+      entries[idx].payment = currentType === 'expense' ? selectedPayment : null;
+      entries[idx].shop = currentType === 'expense' ? document.getElementById('input-shop').value.trim() : '';
+      entries[idx].date = document.getElementById('input-date').value;
+      entries[idx].memo = document.getElementById('input-memo').value;
+    }
+    editingId = null;
+  } else {
+    // 新規エントリ
+    const entry = {
+      id: Date.now(),
+      type: currentType,
+      amount: amount,
+      category: selectedCategory,
+      payment: currentType === 'expense' ? selectedPayment : null,
+      shop: currentType === 'expense' ? document.getElementById('input-shop').value.trim() : '',
+      date: document.getElementById('input-date').value,
+      memo: document.getElementById('input-memo').value,
+      created: new Date().toISOString(),
+    };
+    entries.push(entry);
+  }
   saveData();
   closeModal();
   updateView();
+  autoSync();
+
+  // 5件ごとにバックアップを促す
+  const count = entries.length;
+  if (count > 0 && count % 5 === 0) {
+    if (confirm(`${count}件の記録があります。\nExcelにバックアップしますか？`)) {
+      exportCSV();
+    }
+  }
+}
+
+// ---- 編集 ----
+let editingId = null;
+
+function editEntry(id) {
+  const entry = entries.find(e => e.id === id);
+  if (!entry) return;
+
+  editingId = id;
+  document.getElementById('add-modal').classList.add('active');
+  switchType(entry.type);
+
+  document.getElementById('input-amount').value = entry.amount;
+  document.getElementById('input-date').value = entry.date;
+  document.getElementById('input-memo').value = entry.memo || '';
+
+  if (entry.type === 'expense') {
+    document.getElementById('input-shop').value = entry.shop || '';
+    selectPayment(entry.payment || 'cash');
+    renderShopHistory();
+  }
+
+  selectCategory(entry.category);
+
+  document.getElementById('modal-title').textContent = '記録を編集';
+  document.getElementById('save-btn').textContent = '更新する';
 }
 
 // ---- 削除 ----
@@ -255,6 +312,7 @@ function deleteEntry(id) {
   saveData();
   updateView();
   renderHistory();
+  autoSync();
 }
 
 // ---- 最近の記録 ----
@@ -318,6 +376,7 @@ function renderTxItem(e) {
         <div class="tx-amount ${e.type}">${sign}¥${e.amount.toLocaleString()}</div>
         <div class="tx-date">${e.date.slice(5).replace('-', '/')}</div>
       </div>
+      <button class="tx-delete" onclick="editEntry(${e.id})" style="color:var(--accent)">✏️</button>
       <button class="tx-delete" onclick="deleteEntry(${e.id})">×</button>
     </li>
   `;
@@ -326,7 +385,11 @@ function renderTxItem(e) {
 // ---- グラフ ----
 function renderCharts() {
   renderCategoryChart();
+  renderPaymentChart();
+  renderShopChart();
+  renderDailyChart();
   renderMonthlyChart();
+  document.getElementById('category-detail').innerHTML = '';
 }
 
 function renderCategoryChart() {
@@ -357,6 +420,12 @@ function renderCategoryChart() {
   }
   ctx.style.display = 'block';
 
+  // カテゴリIDを保持（クリック用）
+  const catIds = [];
+  EXPENSE_CATEGORIES.forEach(c => {
+    if (catTotals[c.id]) catIds.push(c.id);
+  });
+
   categoryChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
@@ -370,8 +439,21 @@ function renderCategoryChart() {
     },
     options: {
       responsive: true,
+      onClick: (e, elements) => {
+        if (elements.length > 0) {
+          const idx = elements[0].index;
+          showCategoryDetail(catIds[idx], monthly);
+        }
+      },
       plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 11 } } },
+        legend: {
+          position: 'bottom',
+          labels: { font: { size: 11 } },
+          onClick: (e, item, legend) => {
+            const idx = item.index;
+            showCategoryDetail(catIds[idx], monthly);
+          }
+        },
         tooltip: {
           callbacks: {
             label: (ctx) => `${ctx.label}: ¥${ctx.parsed.toLocaleString()}`
@@ -382,43 +464,280 @@ function renderCategoryChart() {
   });
 }
 
-function renderMonthlyChart() {
-  const labels = [];
-  const incomeData = [];
-  const expenseData = [];
+// ---- カテゴリ詳細表示 ----
+function showCategoryDetail(catId, monthlyEntries) {
+  const cat = EXPENSE_CATEGORIES.find(c => c.id === catId);
+  if (!cat) return;
 
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(currentMonth);
-    d.setMonth(d.getMonth() - i);
-    const y = d.getFullYear();
-    const m = d.getMonth();
-    labels.push(`${m + 1}月`);
+  const items = monthlyEntries.filter(e => e.category === catId);
+  items.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    const me = entries.filter(e => {
-      const ed = new Date(e.date);
-      return ed.getFullYear() === y && ed.getMonth() === m;
-    });
+  const total = items.reduce((s, e) => s + e.amount, 0);
 
-    incomeData.push(me.filter(e => e.type === 'income').reduce((s, e) => s + e.amount, 0));
-    expenseData.push(me.filter(e => e.type === 'expense').reduce((s, e) => s + e.amount, 0));
+  const container = document.getElementById('category-detail');
+  container.innerHTML = `
+    <div class="cat-detail">
+      <div class="cat-detail-header">
+        <span>${cat.icon} ${cat.name}の内訳</span>
+        <span style="color:var(--expense)">合計 ¥${total.toLocaleString()}</span>
+      </div>
+      ${items.length === 0 ? '<p style="color:var(--text-sub);font-size:0.85rem">データなし</p>' :
+        items.map(e => {
+          const payIcon = e.payment === 'credit' ? '💳' : '💴';
+          const shopText = e.shop ? `@ ${e.shop}` : '';
+          return `
+            <div class="cat-detail-item">
+              <div class="detail-left">
+                <span>${e.date.slice(5).replace('-', '/')} ${payIcon} ${shopText}</span>
+                <span class="detail-memo">${e.memo || ''}</span>
+              </div>
+              <span class="detail-amount">¥${e.amount.toLocaleString()}</span>
+            </div>
+          `;
+        }).join('')
+      }
+    </div>
+  `;
+
+  container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ---- 支払方法別グラフ ----
+function renderPaymentChart() {
+  const monthly = getMonthlyEntries().filter(e => e.type === 'expense');
+  const cashTotal = monthly.filter(e => e.payment !== 'credit').reduce((s, e) => s + e.amount, 0);
+  const creditTotal = monthly.filter(e => e.payment === 'credit').reduce((s, e) => s + e.amount, 0);
+
+  // サマリー更新
+  document.querySelector('#payment-summary-cash div:last-child').textContent = '¥' + cashTotal.toLocaleString();
+  document.querySelector('#payment-summary-credit div:last-child').textContent = '¥' + creditTotal.toLocaleString();
+
+  const ctx = document.getElementById('payment-chart');
+  if (paymentChart) paymentChart.destroy();
+
+  if (cashTotal === 0 && creditTotal === 0) {
+    ctx.style.display = 'none';
+    return;
   }
+  ctx.style.display = 'block';
 
-  const ctx = document.getElementById('monthly-chart');
-  if (monthlyChart) monthlyChart.destroy();
-
-  monthlyChart = new Chart(ctx, {
-    type: 'bar',
+  paymentChart = new Chart(ctx, {
+    type: 'doughnut',
     data: {
-      labels: labels,
-      datasets: [
-        { label: '収入', data: incomeData, backgroundColor: '#00b894' },
-        { label: '支出', data: expenseData, backgroundColor: '#d63031' },
-      ],
+      labels: ['現金', 'クレジット'],
+      datasets: [{
+        data: [cashTotal, creditTotal],
+        backgroundColor: ['#fdcb6e', '#6c5ce7'],
+        borderWidth: 2,
+        borderColor: '#fff',
+      }],
     },
     options: {
       responsive: true,
+      onClick: (e, elements) => {
+        if (elements.length > 0) {
+          const idx = elements[0].index;
+          showPaymentDetail(idx === 0 ? 'cash' : 'credit');
+        }
+      },
       plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 11 } } },
+        legend: {
+          position: 'bottom',
+          labels: { font: { size: 11 } },
+          onClick: (e, item) => {
+            showPaymentDetail(item.index === 0 ? 'cash' : 'credit');
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const total = cashTotal + creditTotal;
+              const pct = total > 0 ? Math.round(ctx.parsed / total * 100) : 0;
+              return `${ctx.label}: ¥${ctx.parsed.toLocaleString()} (${pct}%)`;
+            }
+          }
+        }
+      },
+    },
+  });
+}
+
+// ---- 支払方法別詳細 ----
+function showPaymentDetail(method) {
+  const monthly = getMonthlyEntries().filter(e => e.type === 'expense');
+  const items = method === 'credit'
+    ? monthly.filter(e => e.payment === 'credit')
+    : monthly.filter(e => e.payment !== 'credit');
+  items.sort((a, b) => new Date(b.date) - new Date(a.date));
+  const total = items.reduce((s, e) => s + e.amount, 0);
+  const label = method === 'credit' ? '💳 クレジット' : '💴 現金';
+
+  const container = document.getElementById('payment-detail');
+  container.innerHTML = `
+    <div class="cat-detail">
+      <div class="cat-detail-header">
+        <span>${label}の内訳</span>
+        <span style="color:var(--expense)">合計 ¥${total.toLocaleString()}</span>
+      </div>
+      ${items.length === 0 ? '<p style="color:var(--text-sub);font-size:0.85rem">データなし</p>' :
+        items.map(e => {
+          const cat = EXPENSE_CATEGORIES.find(c => c.id === e.category);
+          return `
+            <div class="cat-detail-item">
+              <div class="detail-left">
+                <span>${e.date.slice(5).replace('-','/')} ${cat ? cat.icon+cat.name : ''} ${e.shop ? '@ '+e.shop : ''}</span>
+                <span class="detail-memo">${e.memo || ''}</span>
+              </div>
+              <span class="detail-amount">¥${e.amount.toLocaleString()}</span>
+            </div>
+          `;
+        }).join('')
+      }
+    </div>
+  `;
+  container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ---- 購入場所別グラフ ----
+function renderShopChart() {
+  const monthly = getMonthlyEntries().filter(e => e.type === 'expense' && e.shop);
+  const shopTotals = {};
+  monthly.forEach(e => {
+    shopTotals[e.shop] = (shopTotals[e.shop] || 0) + e.amount;
+  });
+
+  // 金額順でソート、上位10件
+  const sorted = Object.entries(shopTotals).sort((a, b) => b[1] - a[1]);
+  const top = sorted.slice(0, 10);
+
+  const labels = top.map(s => s[0]);
+  const data = top.map(s => s[1]);
+  const shopColors = [
+    '#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6',
+    '#1abc9c', '#e67e22', '#e84393', '#00cec9', '#6c5ce7',
+  ];
+
+  const ctx = document.getElementById('shop-chart');
+  if (shopChart) shopChart.destroy();
+
+  if (data.length === 0) {
+    ctx.style.display = 'none';
+    document.getElementById('shop-detail').innerHTML = '<p style="color:var(--text-sub);font-size:0.85rem;text-align:center;padding:8px">購入場所の記録がありません</p>';
+    return;
+  }
+  ctx.style.display = 'block';
+
+  shopChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: shopColors,
+        borderRadius: 6,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      onClick: (e, elements) => {
+        if (elements.length > 0) {
+          const idx = elements[0].index;
+          showShopDetail(labels[idx]);
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `¥${ctx.parsed.x.toLocaleString()}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { callback: (v) => v >= 1000 ? (v / 1000) + 'k' : v }
+        },
+        y: {
+          ticks: { font: { size: 11 } }
+        }
+      },
+    },
+  });
+}
+
+function showShopDetail(shopName) {
+  const monthly = getMonthlyEntries().filter(e => e.type === 'expense' && e.shop === shopName);
+  monthly.sort((a, b) => new Date(b.date) - new Date(a.date));
+  const total = monthly.reduce((s, e) => s + e.amount, 0);
+
+  const container = document.getElementById('shop-detail');
+  container.innerHTML = `
+    <div class="cat-detail">
+      <div class="cat-detail-header">
+        <span>📍 ${shopName}</span>
+        <span style="color:var(--expense)">合計 ¥${total.toLocaleString()}</span>
+      </div>
+      ${monthly.map(e => {
+        const cat = EXPENSE_CATEGORIES.find(c => c.id === e.category);
+        const payIcon = e.payment === 'credit' ? '💳' : '💴';
+        return `
+          <div class="cat-detail-item">
+            <div class="detail-left">
+              <span>${e.date.slice(5).replace('-', '/')} ${payIcon} ${cat ? cat.icon + cat.name : ''}</span>
+              <span class="detail-memo">${e.memo || ''}</span>
+            </div>
+            <span class="detail-amount">¥${e.amount.toLocaleString()}</span>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+  container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ---- 日別支出グラフ ----
+function renderDailyChart() {
+  const monthly = getMonthlyEntries().filter(e => e.type === 'expense');
+  const y = currentMonth.getFullYear();
+  const m = currentMonth.getMonth();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+  const labels = [];
+  for (let i = 1; i <= daysInMonth; i++) labels.push(i + '日');
+
+  // カテゴリ別の日別データを作成（積み上げ用）
+  const usedCats = [...new Set(monthly.map(e => e.category))];
+  const datasets = usedCats.map((catId, ci) => {
+    const cat = EXPENSE_CATEGORIES.find(c => c.id === catId);
+    const data = new Array(daysInMonth).fill(0);
+    monthly.filter(e => e.category === catId).forEach(e => {
+      const day = new Date(e.date).getDate();
+      if (day >= 1 && day <= daysInMonth) data[day - 1] += e.amount;
+    });
+    return {
+      label: cat ? cat.name : catId,
+      data: data,
+      backgroundColor: CATEGORY_COLORS[EXPENSE_CATEGORIES.findIndex(c => c.id === catId) % CATEGORY_COLORS.length],
+      borderRadius: 2,
+    };
+  });
+
+  const ctx = document.getElementById('daily-chart');
+  if (dailyChart) dailyChart.destroy();
+
+  dailyChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      onClick: (e, elements) => {
+        if (elements.length > 0) {
+          showDailyDetail(elements[0].index + 1, y, m);
+        }
+      },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 9 }, boxWidth: 12 } },
         tooltip: {
           callbacks: {
             label: (ctx) => `${ctx.dataset.label}: ¥${ctx.parsed.y.toLocaleString()}`
@@ -426,14 +745,212 @@ function renderMonthlyChart() {
         }
       },
       scales: {
+        x: {
+          stacked: true,
+          ticks: { font: { size: 9 }, maxRotation: 0, callback: (val, i) => (i + 1) % 5 === 1 ? labels[i] : '' }
+        },
         y: {
-          ticks: {
-            callback: (v) => '¥' + (v / 1000) + 'k'
-          }
+          stacked: true,
+          ticks: { callback: (v) => v >= 1000 ? (v / 1000) + 'k' : v }
         }
       },
     },
   });
+}
+
+// ---- 日別詳細（カテゴリ別→個別取引の2段階） ----
+function showDailyDetail(day, year, month) {
+  const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const items = entries.filter(e => e.date === dateStr && e.type === 'expense');
+  const total = items.reduce((s, e) => s + e.amount, 0);
+
+  const d = new Date(dateStr);
+  const weekday = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
+
+  // カテゴリ別集計
+  const catTotals = {};
+  items.forEach(e => { catTotals[e.category] = (catTotals[e.category] || 0) + e.amount; });
+
+  const container = document.getElementById('daily-detail');
+  if (items.length === 0) {
+    container.innerHTML = `
+      <div class="cat-detail">
+        <div class="cat-detail-header"><span>${month + 1}/${day} (${weekday})</span></div>
+        <p style="color:var(--text-sub);font-size:0.85rem">この日の支出はありません</p>
+      </div>`;
+    return;
+  }
+
+  const catRows = EXPENSE_CATEGORIES
+    .filter(c => catTotals[c.id])
+    .sort((a, b) => (catTotals[b.id] || 0) - (catTotals[a.id] || 0))
+    .map(c => {
+      const catItems = items.filter(e => e.category === c.id);
+      return `
+        <div class="cat-detail-item" style="cursor:pointer" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+          <div class="detail-left"><span>${c.icon} ${c.name} (${catItems.length}件)</span></div>
+          <span class="detail-amount">¥${catTotals[c.id].toLocaleString()} ▼</span>
+        </div>
+        <div style="display:none;padding-left:16px;border-left:3px solid var(--border);margin-left:8px;margin-bottom:4px">
+          ${catItems.map(e => {
+            const payIcon = e.payment === 'credit' ? '💳' : '💴';
+            return `
+              <div class="cat-detail-item">
+                <div class="detail-left">
+                  <span>${payIcon} ${e.shop ? '@ '+e.shop : ''}</span>
+                  <span class="detail-memo">${e.memo || ''}</span>
+                </div>
+                <span class="detail-amount">¥${e.amount.toLocaleString()}</span>
+              </div>`;
+          }).join('')}
+        </div>`;
+    }).join('');
+
+  container.innerHTML = `
+    <div class="cat-detail">
+      <div class="cat-detail-header">
+        <span>${month + 1}/${day} (${weekday})</span>
+        <span style="color:var(--expense)">合計 ¥${total.toLocaleString()}</span>
+      </div>
+      ${catRows}
+    </div>`;
+  container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderMonthlyChart() {
+  const labels = [];
+  const monthInfos = [];
+
+  // 月ごとのデータ収集
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(currentMonth);
+    d.setMonth(d.getMonth() - i);
+    labels.push(`${d.getMonth() + 1}月`);
+    monthInfos.push({ year: d.getFullYear(), month: d.getMonth() });
+  }
+
+  // カテゴリ別積み上げデータ作成
+  const allExpenses = entries.filter(e => e.type === 'expense');
+  const usedCats = [...new Set(allExpenses.map(e => e.category))];
+
+  const expenseDatasets = usedCats.map(catId => {
+    const cat = EXPENSE_CATEGORIES.find(c => c.id === catId);
+    const data = monthInfos.map(info => {
+      return allExpenses
+        .filter(e => e.category === catId && new Date(e.date).getFullYear() === info.year && new Date(e.date).getMonth() === info.month)
+        .reduce((s, e) => s + e.amount, 0);
+    });
+    return {
+      label: cat ? cat.name : catId,
+      data,
+      backgroundColor: CATEGORY_COLORS[EXPENSE_CATEGORIES.findIndex(c => c.id === catId) % CATEGORY_COLORS.length],
+      stack: 'expense',
+    };
+  });
+
+  // 収入は単色1本
+  const incomeData = monthInfos.map(info => {
+    return entries
+      .filter(e => e.type === 'income' && new Date(e.date).getFullYear() === info.year && new Date(e.date).getMonth() === info.month)
+      .reduce((s, e) => s + e.amount, 0);
+  });
+
+  const datasets = [
+    { label: '収入', data: incomeData, backgroundColor: '#00b894', stack: 'income' },
+    ...expenseDatasets,
+  ];
+
+  const ctx = document.getElementById('monthly-chart');
+  if (monthlyChart) monthlyChart.destroy();
+
+  monthlyChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      onClick: (e, elements) => {
+        if (elements.length > 0) {
+          showMonthlyDetail(monthInfos[elements[0].index]);
+        }
+      },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 9 }, boxWidth: 12 } },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ¥${ctx.parsed.y.toLocaleString()}`
+          }
+        }
+      },
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true, ticks: { callback: (v) => '¥' + (v / 1000) + 'k' } }
+      },
+    },
+  });
+}
+
+// ---- 月別詳細（カテゴリ別→個別取引の2段階） ----
+function showMonthlyDetail(info) {
+  const me = entries.filter(e => {
+    const d = new Date(e.date);
+    return d.getFullYear() === info.year && d.getMonth() === info.month;
+  });
+
+  const expense = me.filter(e => e.type === 'expense');
+  const incTotal = me.filter(e => e.type === 'income').reduce((s, e) => s + e.amount, 0);
+  const expTotal = expense.reduce((s, e) => s + e.amount, 0);
+
+  // カテゴリ別集計
+  const catTotals = {};
+  expense.forEach(e => { catTotals[e.category] = (catTotals[e.category] || 0) + e.amount; });
+
+  const catRows = EXPENSE_CATEGORIES
+    .filter(c => catTotals[c.id])
+    .sort((a, b) => (catTotals[b.id] || 0) - (catTotals[a.id] || 0))
+    .map(c => {
+      const catItems = expense.filter(e => e.category === c.id).sort((a, b) => new Date(b.date) - new Date(a.date));
+      return `
+        <div class="cat-detail-item" style="cursor:pointer" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+          <div class="detail-left"><span>${c.icon} ${c.name} (${catItems.length}件)</span></div>
+          <span class="detail-amount">¥${catTotals[c.id].toLocaleString()} ▼</span>
+        </div>
+        <div style="display:none;padding-left:16px;border-left:3px solid var(--border);margin-left:8px;margin-bottom:4px">
+          ${catItems.map(e => {
+            const payIcon = e.payment === 'credit' ? '💳' : '💴';
+            return `
+              <div class="cat-detail-item">
+                <div class="detail-left">
+                  <span>${e.date.slice(5).replace('-','/')} ${payIcon} ${e.shop ? '@ '+e.shop : ''}</span>
+                  <span class="detail-memo">${e.memo || ''}</span>
+                </div>
+                <span class="detail-amount">¥${e.amount.toLocaleString()}</span>
+              </div>`;
+          }).join('')}
+        </div>`;
+    }).join('');
+
+  const container = document.getElementById('monthly-detail');
+  container.innerHTML = `
+    <div class="cat-detail">
+      <div class="cat-detail-header"><span>${info.year}年${info.month + 1}月</span></div>
+      <div style="display:flex;gap:12px;margin-bottom:8px">
+        <div style="flex:1;text-align:center">
+          <div style="font-size:0.75rem;color:var(--text-sub)">収入</div>
+          <div style="font-weight:700;color:var(--income)">¥${incTotal.toLocaleString()}</div>
+        </div>
+        <div style="flex:1;text-align:center">
+          <div style="font-size:0.75rem;color:var(--text-sub)">支出</div>
+          <div style="font-weight:700;color:var(--expense)">¥${expTotal.toLocaleString()}</div>
+        </div>
+        <div style="flex:1;text-align:center">
+          <div style="font-size:0.75rem;color:var(--text-sub)">収支</div>
+          <div style="font-weight:700;color:var(--accent)">¥${(incTotal - expTotal).toLocaleString()}</div>
+        </div>
+      </div>
+      ${catRows || '<p style="color:var(--text-sub);font-size:0.85rem">データなし</p>'}
+    </div>
+  `;
+  container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // ---- レシート撮影 & OCR ----
@@ -617,6 +1134,93 @@ function updateCloudStatus(msg, isError) {
   el.innerHTML = `<p style="font-size:0.85rem;color:${isError ? 'var(--expense)' : 'var(--income)'}">${msg}</p>`;
 }
 
+// JSONP風にGASからデータ取得（CORS回避）
+function gasGet(url, action) {
+  return new Promise((resolve, reject) => {
+    const cbName = '_gasCallback_' + Date.now();
+    const script = document.createElement('script');
+
+    window[cbName] = (data) => {
+      delete window[cbName];
+      document.head.removeChild(script);
+      resolve(data);
+    };
+
+    script.src = url + '?action=' + action + '&callback=' + cbName;
+    script.onerror = () => {
+      delete window[cbName];
+      document.head.removeChild(script);
+      reject(new Error('スクリプト読み込みに失敗'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+// GASからデータ取得（リダイレクト対応）
+function gasRead(url) {
+  return new Promise((resolve, reject) => {
+    const cbName = '_gasCb_' + Date.now();
+    window[cbName] = (data) => {
+      delete window[cbName];
+      const s = document.getElementById(cbName);
+      if (s) s.remove();
+      resolve(data);
+    };
+
+    const script = document.createElement('script');
+    script.id = cbName;
+    script.src = url + '?action=read&callback=' + cbName;
+    script.onerror = () => {
+      delete window[cbName];
+      script.remove();
+      reject(new Error('読み取り失敗'));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+// デバッグ用
+function debugData() {
+  if (entries.length === 0) {
+    alert('データが0件です');
+    return;
+  }
+  const first = entries[0];
+  const sample = 'データ数: ' + entries.length + '件\n\n'
+    + '--- 1件目のデータ ---\n'
+    + 'id: ' + first.id + '\n'
+    + 'type: ' + first.type + '\n'
+    + 'date: [' + first.date + '] (型: ' + typeof first.date + ')\n'
+    + 'amount: ' + first.amount + '\n'
+    + 'category: ' + first.category + '\n'
+    + 'shop: ' + first.shop + '\n'
+    + 'payment: ' + first.payment;
+  alert(sample);
+}
+
+// スプレッドシートから取得したデータを正規化
+function normalizeEntry(e) {
+  // 日付の正規化（様々な形式に対応）
+  if (e.date) {
+    const d = new Date(e.date);
+    if (!isNaN(d.getTime())) {
+      e.date = d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+    }
+  }
+  // 数値の正規化
+  e.id = Number(e.id);
+  e.amount = Number(e.amount);
+  // 空文字をnullに
+  e.payment = e.payment || null;
+  e.shop = e.shop || '';
+  e.memo = e.memo || '';
+  e.type = e.type || 'expense';
+  e.category = e.category || 'other';
+  return e;
+}
+
 async function cloudSync() {
   const url = document.getElementById('gas-url').value.trim();
   if (!url) { alert('Google Apps ScriptのURLを入力してください'); return; }
@@ -624,45 +1228,49 @@ async function cloudSync() {
   updateCloudStatus('同期中...');
 
   try {
-    // 1. クラウドからデータ取得
+    // 1. クラウドからデータ取得（JSONP方式）
     updateCloudStatus('クラウドからデータ取得中...');
-    const readResp = await fetch(url + '?action=read');
-    const readData = await readResp.json();
+    let readData;
+    try {
+      readData = await gasRead(url);
+    } catch (e) {
+      // JSONP失敗時はfetchで試す
+      const readResp = await fetch(url + '?action=read');
+      const text = await readResp.text();
+      readData = JSON.parse(text);
+    }
 
     if (readData.error) throw new Error(readData.error);
 
-    // 2. クラウドのデータをローカルにマージ
-    const cloudEntries = readData.entries || [];
-    const localIds = new Set(entries.map(e => String(e.id)));
-    let addedFromCloud = 0;
+    // 2. クラウドのデータでローカルを完全に上書き
+    const cloudEntries = (readData.entries || []).map(normalizeEntry);
+    entries = cloudEntries;
 
-    cloudEntries.forEach(ce => {
-      if (!localIds.has(String(ce.id))) {
-        entries.push(ce);
-        addedFromCloud++;
-      }
-    });
-
-    // 3. ローカルのデータをクラウドに送信
-    updateCloudStatus('クラウドにデータ送信中...');
-    const writeResp = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'write', entries: entries }),
-    });
-    const writeData = await writeResp.json();
-
-    if (writeData.error) throw new Error(writeData.error);
-
-    // 4. ローカル保存 & 画面更新
+    // 3. ローカル保存 & 全画面更新
     saveData();
     updateView();
+    renderHistory();
+    renderCharts();
+    renderRecent();
 
-    const msg = `同期完了！ クラウドから${addedFromCloud}件取得、${writeData.added || 0}件送信 (合計${writeData.total || entries.length}件)`;
+    const msg = `同期完了！ (${entries.length}件)`;
     updateCloudStatus(msg);
   } catch (err) {
     updateCloudStatus('同期エラー: ' + err.message, true);
   }
+}
+
+// 裏で自動同期（UIをブロックしない）
+function autoSync() {
+  const url = localStorage.getItem('kakeibo_gas_url');
+  if (!url) return;
+
+  // 裏で全データ上書き送信（削除・編集も反映）
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: 'sync', entries: entries }),
+  }).catch(() => {});
 }
 
 // 設定ページ表示時にURL読み込み
