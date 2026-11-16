@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>幻影騎士団 展開ガイド</title>
+<meta name="description" content="遊戯王マスターデュエルのイベント用レンタルデッキ「幻影騎士団」の展開と妨害を、一手ずつ確認できる初心者向け学習ガイド。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Old+Mincho:wght@700;900&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<!--APP-->
+<header class="site-head">
+  <div class="site-head-in">
+    <a class="brand" href="#start">
+      <span class="brand-name">幻影騎士団 展開ガイド</span>
+      <span class="brand-sub">マスターデュエル イベント用レンタルデッキ</span>
+    </a>
+    <nav class="tabs" aria-label="画面の切り替え">
+      <a href="#start" data-tab="start">はじめに</a>
+      <a href="#guide" data-tab="guide">展開</a>
+      <a href="#defense" data-tab="defense">妨害</a>
+      <a href="#notes" data-tab="notes">注意点</a>
+      <a href="#practice" data-tab="practice">練習</a>
+      <a href="#glossary" data-tab="glossary">用語</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ================= はじめに ================= -->
+<section class="view" id="view-start" data-view="start">
+  <p class="source-note rich">
+    イベント「プラネットラン」用の{t:rental}「幻影騎士団」を解説した<a href="https://youtu.be/JQ--WmlgkL8" target="_blank" rel="noopener">YouTubeの元動画</a>をもとにした学習ガイドです。各手順から動画の該当時刻を開けます。
+  </p>
+
+  <h1 class="page-title">今、どのカードで何をするかが分かる</h1>
+  <p class="lead rich">幻影騎士団（ファントム・ナイツ）は、{t:gy}と{t:banish}を行き来しながらモンスターを並べ、相手のターンに相手の動きを止めるデッキです。</p>
+
+  <div class="cta-row">
+    <a class="btn btn-primary" href="#guide">手札から展開を選ぶ</a>
+    <a class="btn" href="#defense">相手ターンの止め方を見る</a>
+  </div>
+
+  <h2>どんな戦い方をするか</h2>
+  <ol class="flow rich">
+    <li>
+      <span class="flow-k">自分のターン 前半</span>
+      <strong>レベル3を2体並べる</strong>
+      <span>手札の1枚から{t:search}と{t:ss}でレベル3のモンスターを2体そろえます。</span>
+    </li>
+    <li>
+      <span class="flow-k">自分のターン 後半</span>
+      <strong>墓地と除外を使い回す</strong>
+      <span>素材にして{t:gy}へ行ったカードが、墓地から自分を{t:banish}して次のカードを連れてきます。これを繰り返して強いモンスターを出します。</span>
+    </li>
+    <li>
+      <span class="flow-k">相手のターン</span>
+      <strong>効果を止めて、カードを破壊する</strong>
+      <span>完成した盤面で、相手のモンスター効果を止めたりカードを破壊したりします（{t:bogai}）。</span>
+    </li>
+  </ol>
+
+  <h2>最初に覚えるカード</h2>
+  <p class="hint">カード名を押すと、役割と効果を確認できます。</p>
+  <div class="keycards" id="keycards"></div>
+
+  <h2>目指す盤面</h2>
+  <p class="rich">どの手札から始めても、最後は同じ形を目指します。それぞれが相手ターンに別の仕事をします。</p>
+  <div class="board rich" id="goal-board">
+    <div class="bz z-field">
+      <h3><span class="zb">場</span>モンスター</h3>
+      <ul>
+        <li>{c:requiem}<span>相手のモンスター効果を無効にして破壊。素材の数（3回）まで。</span></li>
+        <li>{c:bardiche}<span>自分のリンク先に闇属性エクシーズが出たとき、カードを1枚破壊できる（1ターンに1度）。攻撃力2900。</span></li>
+        <li>{c:robe} ともう1体<span>どちらもレベル4。相手ターンに{c:shiten}の素材になる。</span></li>
+      </ul>
+    </div>
+    <div class="bz z-field">
+      <h3><span class="zb">場</span>魔法・罠（裏向き）</h3>
+      <ul>
+        <li>{c:fog}<span>場のモンスター1体の効果と攻撃を止める。</span></li>
+      </ul>
+    </div>
+    <div class="bz z-gy">
+      <h3><span class="zb">墓</span>墓地</h3>
+      <ul>
+        <li>{c:veil}<span>相手ターンに墓地から除外して、{c:shiten}を出す。</span></li>
+      </ul>
+    </div>
+  </div>
+  <p class="hint rich">動画の説明：{c:requiem}で「モンスター効果の無効と破壊を3回」、さらに{c:fog}で1体を止められます（<a class="vlink" data-t="446" href="#">動画 7:26</a>）。</p>
+
+  <details class="fold">
+    <summary>このデッキの強みと苦手なこと（動画の評価）</summary>
+    <div class="fold-body rich">
+      <ul>
+        <li>投稿者は、3つあるレンタルデッキの中で「いちばん回しやすくて強い」と評価しています（<a class="vlink" data-t="48" href="#">0:48</a>）。</li>
+        <li>{t:shodo}になるカードが多く入っていて、1枚から最終盤面まで進めます。</li>
+        <li>{c:droplet}が入っていて、先攻でも後攻でも強く使えると紹介されています。{t:gote}にも向いています（<a class="vlink" data-t="93" href="#">1:33</a>）。</li>
+        <li>苦手：魔法カードを止める手段がほとんどありません。魔法を何枚も使うデッキは苦手です（<a class="vlink" data-t="467" href="#">7:47</a>）。</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="fold">
+    <summary>このガイドの情報源と、確認できていない点</summary>
+    <div class="fold-body rich">
+      <ul>
+        <li>手順は元動画の文字起こしをもとにしています。対戦の再現ではなく、展開を理解するための学習ガイドです。</li>
+        <li>文字起こしだけでは確定できない操作には、そのステップに<strong class="tag-verify">要確認</strong>の表示を付けています。動画の画面で確認してください。</li>
+        <li>動画の口頭説明にはなく、カードの効果から補った注意には「カードテキストにもとづく補足」と書いています。</li>
+        <li>カード22枚の名前・種類・レベル・攻守・リンクマーカーは、公開されているカードデータベース（yaml-yugi、2026年11月16日時点）と機械的に照合しています。効果の要約も、同じデータベースの日本語テキストと読み比べて直しました。魔解騎士シャーマナイトだけは日本語テキストが未登録だったため、英語テキストと照合しています。</li>
+        <li>公式カードデータベースそのものは直接確認できていません。カード詳細から公式データベースを開けるので、正確な文章はそちらで確認してください。</li>
+        <li>レンタルデッキの正確な枚数や全カードの一覧は確認できていません。動画では、増援・おろかな埋葬などから始める展開は扱わず、動画のコメント欄で案内するとしています（<a class="vlink" data-t="1232" href="#">20:32</a>）。</li>
+      </ul>
+      <h4>文字起こしの聞き間違いと正しい名前</h4>
+      <div class="tablebox">
+        <table>
+          <thead><tr><th>文字起こし</th><th>正しい名前</th></tr></thead>
+          <tbody>
+            <tr><td>現役／現役しな／幻獣機神</td><td>幻影騎士団（ファントム・ナイツ）</td></tr>
+            <tr><td>ディケイクロック</td><td>{c:decay|幻影騎士団ディケイクローク}</td></tr>
+            <tr><td>ドゥームソレット／ソウルレット</td><td>{c:solleret|幻影騎士団ドゥームソルレット}</td></tr>
+            <tr><td>アンブレージベイル／ベル</td><td>{c:veil|幻影騎士団アンブレイジベイル}</td></tr>
+            <tr><td>マレボレンスサイレス／サイス</td><td>{c:scythe|幻影騎士団マレヴォレンスサイス}</td></tr>
+            <tr><td>シャカナイト／シャーマナイト</td><td>{c:shamanite|魔解騎士シャーマナイト}</td></tr>
+            <tr><td>ファントムコックブレード／キリケン／切り札／切り剣</td><td>{c:fog|幻影霧剣}</td></tr>
+            <tr><td>ラウンチ</td><td>{c:rum|RUM－幻影騎士団レクイエム}（効果の説明から判断）</td></tr>
+            <tr><td>視点ダリベ／始点ダリベ</td><td>{c:shiten|四天の龍 ダーク・リベリオン・エクシーズ・ドラゴン}</td></tr>
+            <tr><td>ベルズオピオン</td><td>{c:ophion|ヴェルズ・オピオン}</td></tr>
+            <tr><td>カルマイル／カルマル／カルマレ</td><td>{c:karmael|エクソシスター・カルマエル}</td></tr>
+            <tr><td>ステンドグレイブ</td><td>{c:greaves|幻影騎士団ステンドグリーブ}</td></tr>
+            <tr><td>禁じられた一雫</td><td>{c:droplet|禁じられた一滴}（読みは「ひとしずく」）</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+</section>
+
+<!-- ================= 展開ガイド：ルート選択 ================= -->
+<section class="view" id="view-guide" data-view="guide" hidden>
+  <h1 class="page-title">手札にあるのはどれ？</h1>
+  <p class="lead rich">手札に合うものを選ぶと、最初の操作から完成まで一手ずつ確認できます。3つとも最後は同じ盤面になります。</p>
+  <div class="routes" id="route-list"></div>
+  <p class="hint rich">3つのうち複数が手札にあるときの優先順位は、動画では説明されていません。動画ではこの順番で紹介されています。増援・おろかな埋葬などから始める展開は、動画では扱っていません。</p>
+</section>
+
+<!-- ================= 展開ガイド：ステップ ================= -->
+<section class="view" id="view-route" data-view="route" hidden>
+  <div class="route-head">
+    <a class="back-link" href="#guide">手札を選び直す</a>
+    <h1 class="route-title" id="route-title"></h1>
+  </div>
+  <div class="progress" id="progress">
+    <div class="progress-text"><span id="progress-count"></span><span id="progress-phase"></span></div>
+    <div class="progress-bar" role="progressbar" aria-valuemin="0" id="progress-bar"><span id="progress-fill"></span></div>
+  </div>
+  <div class="route-grid">
+    <article class="step" id="step" tabindex="-1" aria-live="polite"></article>
+    <aside class="route-side" aria-label="この操作のあとの状態と、ステップの一覧">
+      <details class="fold" id="state-fold" open>
+        <summary><span>この操作のあとの状態</span><span class="sum-counts" id="state-counts"></span></summary>
+        <div class="fold-body" id="state"></div>
+      </details>
+      <details class="fold" id="list-fold">
+        <summary>全ステップの一覧から移動する</summary>
+        <div class="fold-body" id="steplist"></div>
+      </details>
+    </aside>
+    <div class="stepnav" id="stepnav">
+      <button type="button" class="btn" id="btn-prev">戻る</button>
+      <button type="button" class="btn btn-ghost" id="btn-reset">最初から</button>
+      <button type="button" class="btn btn-primary" id="btn-next">次へ</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 妨害ガイド ================= -->
+<section class="view" id="view-defense" data-view="defense" hidden>
+  <h1 class="page-title">相手ターンの止め方</h1>
+  <p class="lead rich">完成した盤面には、相手を止める手段が4つあります。相手が何をしてきたかで、使うものを選びます。</p>
+
+  <div class="callout c-info rich">
+    <strong>決まった順番はありません。</strong>
+    動画の方針は「基本は{c:requiem}から使う」ですが、相手のデッキや場面で変わります。{c:ophion}と{c:karmael}のどちらを出すかも、投稿者は「使い手による」と話しています。
+  </div>
+
+  <h2>4つの手段</h2>
+  <div class="tools rich">
+    <div class="tool">
+      <h3>{c:requiem}</h3>
+      <p class="tool-where"><span class="zb z-field">場</span>3回まで</p>
+      <p>相手が<strong>モンスターの効果</strong>を発動したとき、それを無効にして破壊します。</p>
+    </div>
+    <div class="tool">
+      <h3>{c:fog}</h3>
+      <p class="tool-where"><span class="zb z-field">場</span>裏向きでセット</p>
+      <p><strong>すでに場にいる</strong>モンスター1体の効果と攻撃を止めます。</p>
+    </div>
+    <div class="tool">
+      <h3>{c:veil}</h3>
+      <p class="tool-where"><span class="zb z-gy">墓</span>墓地から使う</p>
+      <p>{c:shiten}を出して<strong>カードを破壊</strong>し、そのあと{c:ophion}か{c:karmael}に変えます。</p>
+    </div>
+    <div class="tool">
+      <h3>{c:bardiche}</h3>
+      <p class="tool-where"><span class="zb z-field">場</span>1ターンに1度</p>
+      <p>自分の{t:linkzone}に闇属性エクシーズが出たとき、<strong>カードを1枚破壊</strong>できます。</p>
+    </div>
+  </div>
+
+  <h2>相手の行動から選ぶ</h2>
+  <div class="cases rich">
+    <div class="case">
+      <p class="case-if">相手がモンスターの効果を発動した</p>
+      <p class="case-then">{c:requiem}で無効にして破壊する。</p>
+      <p class="case-more">止めたあと、{t:gy}のエクシーズモンスターを{c:bardiche}のリンク先に戻せば、もう1枚破壊できます（{c:bardiche}の破壊をそのターンにまだ使っていない場合）。</p>
+    </div>
+    <div class="case">
+      <p class="case-if">止めたいモンスターが、もう場に出ている</p>
+      <p class="case-then">{c:fog}をそのモンスターに使う。</p>
+      <p class="case-more">効果が無効になり、攻撃もできなくなります。破壊はしません。</p>
+    </div>
+    <div class="case">
+      <p class="case-if">相手の場のカードを破壊したい</p>
+      <p class="case-then">{c:veil}の墓地効果で{c:shiten}を出す。</p>
+      <p class="case-more">{c:bardiche}のリンク先に出せば、{c:bardiche}の破壊と合わせて2枚破壊できます。</p>
+    </div>
+    <div class="case">
+      <p class="case-if">相手がレベル5以上のモンスターを出して戦うデッキ</p>
+      <p class="case-then">{c:shiten}から{c:ophion}を出す。</p>
+      <p class="case-more">レベル5以上のモンスターを特殊召喚できなくします。</p>
+    </div>
+    <div class="case">
+      <p class="case-if">どうしても通したくない魔法・罠がある</p>
+      <p class="case-then">{c:shiten}から{c:karmael}を出す。</p>
+      <p class="case-more">魔法を止められるのはこの1回だけです。通常魔法・通常罠・モンスター効果に使えます。</p>
+    </div>
+  </div>
+
+  <h2>それぞれのくわしい使い方</h2>
+
+  <details class="fold">
+    <summary>ダーク・レクイエムを使う基本方針</summary>
+    <div class="fold-body rich">
+      <ul>
+        <li>動画の方針：「妨害は基本的には{c:requiem}から使ったほうがいい」「何も考えずレクイエムから使っていけばいい」（<a class="vlink" data-t="497" href="#">8:17</a>、<a class="vlink" data-t="557" href="#">9:17</a>）。</li>
+        <li>{t:material}を1つ取り除くごとに1回使えます。完成盤面では素材が3つなので3回です。</li>
+        <li>止められるのはモンスターの効果だけです。魔法・罠には使えません。</li>
+        <li>無効にしたあと、自分の{t:gy}のエクシーズモンスター1体を場に戻せます（次の項目）。</li>
+      </ul>
+      <div class="callout c-verify">
+        <strong>動画の実演は、おすすめの順番とは違います。</strong>
+        実演では{c:veil}から使っています。対戦相手（ソロモードのCPU）の手札がなくなって説明を続けられなくなるのを避けるため、あえて{c:requiem}を後回しにしたと話しています。
+      </div>
+    </div>
+  </details>
+
+  <details class="fold">
+    <summary>バルディッシュと蘇生を組み合わせる</summary>
+    <div class="fold-body rich">
+      <ol>
+        <li>相手のモンスター効果を{c:requiem}で無効にして破壊します。</li>
+        <li>「その後、墓地のエクシーズモンスターを特殊召喚できる」の部分で、{t:gy}の{c:breaksword}か{c:scythe}を選びます。</li>
+        <li>置く場所を{c:bardiche}の{t:linkzone}にします。</li>
+        <li>{c:bardiche}の効果を発動し、場のカードを1枚破壊します。</li>
+      </ol>
+      <p>1回の無効が「無効＋破壊」になります。動画では「できればこうしたほうが、妨害の数としては美しい」と説明されています（<a class="vlink" data-t="559" href="#">9:19</a>）。</p>
+      <div class="callout c-note">
+        <strong>カードテキストにもとづく補足</strong>
+        {c:bardiche}の破壊効果は1ターンに1度です。同じターンに{c:shiten}を出したときに使ったら、{c:requiem}で戻したモンスターではもう使えません。どちらで使うかを選びます。動画の口頭説明にはない点です。
+      </div>
+    </div>
+  </details>
+
+  <details class="fold">
+    <summary>アンブレイジベイルから四天の龍を出す</summary>
+    <div class="fold-body rich">
+      <ol>
+        <li>相手ターンに、{t:gy}の{c:veil}を{t:banish}して効果を発動します。</li>
+        <li>場のレベル4の2体（{c:breaksword}の効果で戻した{c:robe}ともう1体）を重ねて、{c:shiten}を{t:xyz}します。</li>
+        <li>{c:shiten}が出たときの効果で、自分の場のカードと相手の場のカードを同じ数ずつ選んで破壊します。</li>
+        <li>{c:bardiche}の{t:linkzone}に出していれば、{c:bardiche}の効果でもう1枚破壊できます。動画では「これでまず2破壊」と説明されています（<a class="vlink" data-t="522" href="#">8:42</a>）。</li>
+        <li>このあと相手が何か効果を発動したら、{c:shiten}の{t:material}を1つ取り除いて、{c:ophion}か{c:karmael}を上に重ねます。</li>
+      </ol>
+      <div class="callout c-verify">
+        <strong>要確認</strong>
+        手順2でどのモンスターを重ねるか、手順3で自分のどのカードを破壊するかは、動画の口頭説明にありません。重ねるモンスターは{c:shiten}の素材条件（闇属性レベル4が2体）から整理しています。動画の画面で確認してください。
+      </div>
+    </div>
+  </details>
+
+  <details class="fold">
+    <summary>オピオンとカルマエルの使い分け</summary>
+    <div class="fold-body rich">
+      <div class="versus">
+        <div class="vs">
+          <h4>{c:ophion}</h4>
+          <dl>
+            <dt>できること</dt><dd>レベル5以上のモンスターを、お互いに特殊召喚できなくする。</dd>
+            <dt>続く長さ</dt><dd>素材を持って場にいるあいだ、ずっと。</dd>
+            <dt>向いている場面</dt><dd>相手がレベル5以上のモンスターを出して戦うデッキのとき。</dd>
+            <dt>気をつけること</dt><dd>自分も出せなくなる。レベルを持たないエクシーズ・リンクモンスターは止まらない。</dd>
+          </dl>
+        </div>
+        <div class="vs">
+          <h4>{c:karmael}</h4>
+          <dl>
+            <dt>できること</dt><dd>相手のモンスター効果・通常魔法・通常罠の内容を書き換えて、実質的に止める。</dd>
+            <dt>続く長さ</dt><dd>1回だけ。素材を全部使う。</dd>
+            <dt>向いている場面</dt><dd>魔法カードを多く使う相手や、通したくない1枚があるとき。</dd>
+            <dt>気をつけること</dt><dd>使ったら終わり。速攻魔法や永続魔法などには使えない。</dd>
+          </dl>
+        </div>
+      </div>
+      <ul>
+        <li>動画の実演では{c:ophion}を出しています。「{c:karmael}を出すと、たぶんそれで終わりになってしまう」ためです（<a class="vlink" data-t="581" href="#">9:41</a>）。</li>
+        <li>投稿者の考え：「魔法の連打に少し弱いので{c:karmael}を出す考え方もある。ただ{c:ophion}のほうが強いので悩みどころ。使い手による」（<a class="vlink" data-t="639" href="#">10:39</a>）。</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="fold">
+    <summary>幻影霧剣の役割</summary>
+    <div class="fold-body rich">
+      <ul>
+        <li>場の効果モンスター1体を選びます。そのモンスターは効果が無効になり、攻撃もできなくなります。</li>
+        <li>{c:requiem}は「発動した瞬間に止めて破壊」、{c:fog}は「場にいるモンスターを止め続ける」という違いがあります。</li>
+        <li>場に残って何度も効果を使うモンスターや、攻撃してくる大きなモンスターに向いています。</li>
+        <li>選んだモンスターが場を離れると、{c:fog}も破壊されます。魔法・罠は止められません。</li>
+        <li>{t:gy}へ行ったあとは、墓地から{t:banish}して「幻影騎士団」モンスターを場に戻す効果も使えます。</li>
+      </ul>
+      <p>動画の説明：「モンスターの効果を無効にしながら、攻撃できない制約を付ける」（<a class="vlink" data-t="454" href="#">7:34</a>）。</p>
+    </div>
+  </details>
+
+  <details class="fold">
+    <summary>動画の実演の流れ（参考）</summary>
+    <div class="fold-body rich">
+      <p>ソロモードの対戦相手に、ある程度動かせてから止める実演です（<a class="vlink" data-t="480" href="#">8:00</a>〜）。説明のための順番で、いつもこの順番が正解というわけではありません。</p>
+      <ol>
+        <li>{t:gy}の{c:veil}の効果で{c:shiten}を出す。</li>
+        <li>{c:shiten}の効果と{c:bardiche}の効果で、合わせて2枚破壊する。</li>
+        <li>相手の効果に反応して、{c:shiten}から{c:ophion}を出す。</li>
+        <li>相手がモンスターを特殊召喚する効果を使ったところで、{c:requiem}で止める。</li>
+        <li>{c:fog}でモンスターの効果を無効にする。</li>
+      </ol>
+      <div class="callout c-verify">
+        <strong>要確認</strong>
+        手順4と5のあいだ（10:10〜10:21）は文字起こしが途切れています。この部分の操作は動画で確認してください。
+      </div>
+    </div>
+  </details>
+
+  <details class="fold">
+    <summary>この盤面が苦手な相手</summary>
+    <div class="fold-body rich">
+      <ul>
+        <li>魔法カードを止める手段は{c:karmael}の1回だけです。魔法を何枚も使うデッキは苦手です。</li>
+        <li>動画では例としてデッキ名を挙げています（文字起こしでは「戦闘機」。「閃刀姫」デッキのことと思われます）。今回のイベントでは使われないだろう、とも話しています（<a class="vlink" data-t="467" href="#">7:47</a>）。</li>
+        <li>動画のまとめ：「妨害の当て方をよほど間違えない限り、この盤面はとても強い」（<a class="vlink" data-t="630" href="#">10:30</a>）。</li>
+      </ul>
+    </div>
+  </details>
+</section>
+
+<!-- ================= 注意点 ================= -->
+<section class="view" id="view-notes" data-view="notes" hidden>
+  <h1 class="page-title">間違えやすい4つのこと</h1>
+  <p class="lead">展開の途中で止まってしまう原因は、ほとんどがこの4つです。</p>
+
+  <h2>1. 素材の外し方</h2>
+  <p class="rich">エクシーズモンスターの{t:material}を取り除くとき、どれを選ぶかで次の手が変わります。考え方は1つで、<strong>「墓地で効果を使いたいカードを取り除く」</strong>です。</p>
+  <div class="tablebox rich">
+    <table>
+      <thead><tr><th>場面</th><th>取り除く素材</th><th>理由</th></tr></thead>
+      <tbody>
+        <tr><td>ルート1（ディケイクローク）の{c:scythe}</td><td><strong>{c:decay}</strong></td><td>あとで墓地効果を{c:shamanite}に使うため</td></tr>
+        <tr><td>ルート2（ドゥームソルレット）の{c:scythe}</td><td><strong>{c:boots}</strong></td><td>墓地効果で{c:fog}をサーチするため</td></tr>
+        <tr><td>ルート3（ティアースケイル）の{c:scythe}</td><td><strong>{c:boots}</strong></td><td>最後に墓地効果で{c:fog}をサーチするため</td></tr>
+        <tr><td>全ルートの{c:shamanite}</td><td><strong>3つ全部</strong></td><td>レベル3を呼び戻すには素材が3つ必要</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="rich">ルート2で{c:boots}を取り除くと、{c:decay}は{c:scythe}の下に残ります。そのため{c:scales}の効果で2枚目の{c:decay}を墓地へ送ります（<a class="vlink" data-t="774" href="#">動画 12:54</a>）。</p>
+
+  <h2>2. 効果を使う順番</h2>
+  <ul class="checks rich">
+    <li><strong>{c:decay} → {c:solleret} の順。</strong>{c:shamanite}を素材にするときは、先に{c:decay}の墓地効果、次に{c:solleret}の墓地効果を使います（<a class="vlink" data-t="792" href="#">動画 13:12</a>）。動画では理由は説明されていません。</li>
+    <li><strong>{c:greaves}のレベルは上げない。</strong>手札から出すときも、墓地効果で仲間を出すときも「上げない」を選びます（<a class="vlink" data-t="367" href="#">動画 6:07</a>）。</li>
+    <li><strong>{c:scales}が戻るのは、除外の直後だけ。</strong>仲間が墓地から除外されたときに出る確認を見逃さないようにします。</li>
+    <li><strong>ルート3は{c:bardiche}が先。</strong>他のルートでは終盤に出しますが、ルート3では{c:scythe}の効果を使ったあとすぐに出します（<a class="vlink" data-t="1028" href="#">動画 17:08</a>）。</li>
+  </ul>
+
+  <h2>3. モンスターを置く場所</h2>
+  <ul class="checks rich">
+    <li><strong>{c:cherubini}の{t:linkzone}を使う。</strong>リンク先のモンスターは効果で破壊されません。動画では{c:scythe}、{c:shamanite}、通常召喚する{c:decay}をリンク先に置いています（<a class="vlink" data-t="693" href="#">動画 11:33</a>）。</li>
+    <li><strong>{c:breaksword}は必ず{c:bardiche}のリンク先。</strong>リンク先に出さないと{c:bardiche}の破壊効果が発動せず、仲間を戻せません（<a class="vlink" data-t="872" href="#">動画 14:32</a>）。</li>
+    <li><strong>相手ターンも{c:bardiche}のリンク先。</strong>{c:shiten}や、{c:requiem}で戻すエクシーズモンスターをリンク先に出すと、{c:bardiche}の破壊効果を使えます。</li>
+  </ul>
+  <figure class="zonefig">
+    <div class="zonegrid" role="img" aria-label="EXモンスターゾーンのリンクモンスターから見て、左下と右下のモンスターゾーンがリンク先">
+      <span class="zg-empty"></span><span class="zg-ex">EXモンスターゾーン<b>ケルビーニ／バルディッシュ</b><i>↙　↘</i></span><span class="zg-empty"></span><span class="zg-ex zg-dim">EXモンスターゾーン</span><span class="zg-empty"></span>
+      <span class="zg-link">リンク先</span><span class="zg-zone">モンスターゾーン</span><span class="zg-link">リンク先</span><span class="zg-zone">モンスターゾーン</span><span class="zg-zone">モンスターゾーン</span>
+    </div>
+    <figcaption>左側のEXモンスターゾーンに出した場合の図です。ケルビーニもバルディッシュも左下と右下を指します。バルディッシュの右向きの矢印は、EXモンスターゾーンにいるあいだはどのゾーンも指しません。</figcaption>
+  </figure>
+  <div class="callout c-note rich">
+    <strong>カードテキストにもとづく補足</strong>
+    {c:bardiche}の破壊効果は1ターンに1度です。ルート3は{c:bardiche}が先に場にいますが、破壊効果は{c:breaksword}を出すときまで使わずに取っておきます。動画の口頭説明にはない点です。
+  </div>
+
+  <h2>4. ダスティローブの効果を使うタイミング</h2>
+  <p class="rich">{c:robe}の「攻撃力を800上げる」効果は、<strong>{c:breaksword}の効果で場に戻したあと</strong>に使います。</p>
+  <ol class="timeline rich">
+    <li class="ng"><span class="tl-k">まだ使えない</span>{c:rum}の効果で除外から戻ってきた直後。効果が{t:negate|無効}になっています。</li>
+    <li><span class="tl-k">途中</span>{c:breaksword}の素材になり、{c:breaksword}が破壊されて{t:gy}へ行きます。</li>
+    <li><span class="tl-k">準備</span>{c:breaksword}の効果で墓地から戻すとき、<strong>攻撃表示</strong>で出します。</li>
+    <li class="ok"><span class="tl-k">ここで使う</span>効果を発動して守備表示にし、{c:bardiche}の攻撃力を2900にします。</li>
+  </ol>
+  <p class="rich">投稿者自身も動画の中でこのタイミングを間違えていて、「真似しないように」と説明しています（<a class="vlink" data-t="1169" href="#">動画 19:29</a>）。</p>
+
+  <h2>名前が似ているカード</h2>
+  <ul class="checks rich">
+    <li><strong>ダーク・リベリオンは2種類。</strong>自分のターンに出すのは{c:rebellion}。相手ターンに出すのは{c:shiten}です。</li>
+    <li><strong>レクイエムは2種類。</strong>モンスターが{c:requiem}、魔法カードが{c:rum}です。</li>
+    <li><strong>{c:fog}は2回出てくる。</strong>展開の途中で墓地から使う1枚と、最後に場にセットする1枚は別のカードです。</li>
+  </ul>
+</section>
+
+<!-- ================= 練習 ================= -->
+<section class="view" id="view-practice" data-view="practice" hidden>
+  <h1 class="page-title">練習と確率</h1>
+  <p class="lead">手順を見ずに次の一手を選ぶクイズと、最初の手札に初動が来る確率の計算です。</p>
+
+  <h2>クイズ：次の一手は？</h2>
+  <div class="quiz" id="quiz"></div>
+
+  <h2>初動が最初の手札に来る確率</h2>
+  <p class="rich">3つの{t:shodo}のうち、どれか1枚でも最初の手札に来る確率を計算します。枚数を変えると、すぐに計算し直します。</p>
+  <form class="prob" id="prob-form" novalidate>
+    <div class="prob-row">
+      <label for="p-deck">デッキの枚数</label>
+      <div class="numbox"><button type="button" class="btn btn-small" data-step="-1" data-for="p-deck" aria-label="デッキの枚数を1減らす">−</button><input type="number" id="p-deck" inputmode="numeric" min="40" max="60" value="40"><button type="button" class="btn btn-small" data-step="1" data-for="p-deck" aria-label="デッキの枚数を1増やす">＋</button></div>
+      <p class="prob-note">仮の値です（40〜60枚）。</p>
+    </div>
+    <div class="prob-row">
+      <label for="p-decay">幻影騎士団ディケイクローク</label>
+      <div class="numbox"><button type="button" class="btn btn-small" data-step="-1" data-for="p-decay" aria-label="ディケイクロークを1枚減らす">−</button><input type="number" id="p-decay" inputmode="numeric" min="0" max="3" value="3"><button type="button" class="btn btn-small" data-step="1" data-for="p-decay" aria-label="ディケイクロークを1枚増やす">＋</button></div>
+      <p class="prob-note">動画で「3枚入っている」と話しています。</p>
+    </div>
+    <div class="prob-row">
+      <label for="p-solleret">幻影騎士団ドゥームソルレット</label>
+      <div class="numbox"><button type="button" class="btn btn-small" data-step="-1" data-for="p-solleret" aria-label="ドゥームソルレットを1枚減らす">−</button><input type="number" id="p-solleret" inputmode="numeric" min="0" max="3" value="3"><button type="button" class="btn btn-small" data-step="1" data-for="p-solleret" aria-label="ドゥームソルレットを1枚増やす">＋</button></div>
+      <p class="prob-note">仮の値です。動画では枚数を話していません。</p>
+    </div>
+    <div class="prob-row">
+      <label for="p-scales">幻影騎士団ティアースケイル</label>
+      <div class="numbox"><button type="button" class="btn btn-small" data-step="-1" data-for="p-scales" aria-label="ティアースケイルを1枚減らす">−</button><input type="number" id="p-scales" inputmode="numeric" min="0" max="3" value="3"><button type="button" class="btn btn-small" data-step="1" data-for="p-scales" aria-label="ティアースケイルを1枚増やす">＋</button></div>
+      <p class="prob-note">仮の値です。動画では枚数を話していません。</p>
+    </div>
+    <div class="prob-row">
+      <label for="p-other">その他の初動（増援・おろかな埋葬など）</label>
+      <div class="numbox"><button type="button" class="btn btn-small" data-step="-1" data-for="p-other" aria-label="その他の初動を1枚減らす">−</button><input type="number" id="p-other" inputmode="numeric" min="0" max="20" value="0"><button type="button" class="btn btn-small" data-step="1" data-for="p-other" aria-label="その他の初動を1枚増やす">＋</button></div>
+      <p class="prob-note">このガイドに手順はありません。含めて計算したいときだけ入れます。</p>
+    </div>
+  </form>
+  <div class="callout c-verify">
+    <strong>枚数はゲーム内で確認してください</strong>
+    レンタルデッキの正確な枚数は確認できていません。ゲーム内のデッキ画面を見て、上の数字を直してから結果を読んでください。
+  </div>
+  <div class="prob-out" id="prob-out" aria-live="polite"></div>
+  <details class="fold">
+    <summary>計算のしかた</summary>
+    <div class="fold-body rich">
+      <ul>
+        <li>「初動が1枚も来ない確率」を求めて、100%から引いています。デッキから初動以外のカードだけを引き続ける確率です。</li>
+        <li>先攻は最初の手札5枚、後攻は最初のドローを含めた6枚で計算しています。</li>
+        <li>{c:scales}は捨てる手札がもう1枚必要ですが、手札は5枚以上あるので、ここでは1枚あれば始められるものとして数えています。</li>
+        <li>相手の{t:handtrap}で止められる場合は考えていません。</li>
+      </ul>
+    </div>
+  </details>
+</section>
+
+<!-- ================= 用語・カード ================= -->
+<section class="view" id="view-glossary" data-view="glossary" hidden>
+  <h1 class="page-title">用語とカード</h1>
+  <label class="search" for="q">
+    <span>ことばやカード名で探す</span>
+    <input type="search" id="q" placeholder="例：サーチ、霧剣、サイス" autocomplete="off">
+  </label>
+  <h2>用語</h2>
+  <div class="gloss" id="term-list"></div>
+  <h2>カード</h2>
+  <p class="hint">動画での呼び方や、文字起こしの聞き間違いでも探せます。</p>
+  <div class="gloss" id="card-list"></div>
+  <p class="empty" id="no-hit" hidden>見つかりませんでした。別のことばで試してください。</p>
+</section>
+
+</main>
+
+<!-- 説明を表示するシート -->
+<div class="sheet-back" id="sheet-back" hidden>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1">
+    <div class="sheet-top">
+      <button type="button" class="btn btn-small" id="sheet-prev" hidden>前の説明に戻る</button>
+      <button type="button" class="btn btn-small sheet-close" id="sheet-close">閉じる</button>
+    </div>
+    <div class="sheet-body" id="sheet-body"></div>
+  </div>
+</div>
+<!--/APP-->
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
