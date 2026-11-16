@@ -160,19 +160,23 @@
     <div class="progress-text"><span id="progress-count"></span><span id="progress-phase"></span></div>
     <div class="progress-bar" role="progressbar" aria-valuemin="0" id="progress-bar"><span id="progress-fill"></span></div>
   </div>
-  <article class="step" id="step" tabindex="-1" aria-live="polite"></article>
-  <details class="fold" id="state-fold" open>
-    <summary>この操作のあとの場・墓地・除外</summary>
-    <div class="fold-body" id="state"></div>
-  </details>
-  <details class="fold" id="list-fold">
-    <summary>全ステップの一覧から移動する</summary>
-    <div class="fold-body" id="steplist"></div>
-  </details>
-  <div class="stepnav" id="stepnav">
-    <button type="button" class="btn" id="btn-prev">戻る</button>
-    <button type="button" class="btn btn-ghost" id="btn-reset">最初から</button>
-    <button type="button" class="btn btn-primary" id="btn-next">次へ</button>
+  <div class="route-grid">
+    <article class="step" id="step" tabindex="-1" aria-live="polite"></article>
+    <aside class="route-side" aria-label="この操作のあとの状態と、ステップの一覧">
+      <details class="fold" id="state-fold" open>
+        <summary><span>この操作のあとの状態</span><span class="sum-counts" id="state-counts"></span></summary>
+        <div class="fold-body" id="state"></div>
+      </details>
+      <details class="fold" id="list-fold">
+        <summary>全ステップの一覧から移動する</summary>
+        <div class="fold-body" id="steplist"></div>
+      </details>
+    </aside>
+    <div class="stepnav" id="stepnav">
+      <button type="button" class="btn" id="btn-prev">戻る</button>
+      <button type="button" class="btn btn-ghost" id="btn-reset">最初から</button>
+      <button type="button" class="btn btn-primary" id="btn-next">次へ</button>
+    </div>
   </div>
 </section>
 

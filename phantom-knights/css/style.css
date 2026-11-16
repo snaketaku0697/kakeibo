@@ -541,3 +541,133 @@ button.route-card { font: inherit; }
 .prob-big > div { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 2px; }
 .prob-k { font-size: 0.85rem; color: var(--sub); font-weight: 700; }
 .prob-big b { font-family: var(--f-display); font-weight: 900; font-size: 2rem; line-height: 1.2; font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   画面幅ごとの見やすさの調整
+   スマホ: 「今やる操作」を最初に大きく。状態は短くまとめる。
+   タブレット（iPad Pro など 800px 以上）: 手順と状態を左右に並べる。
+   ============================================================ */
+
+/* ---- 共通：幅 ---- */
+.site-head-in, .wrap { max-width: 1180px; }
+.view { width: 100%; max-width: 920px; margin-inline: auto; }
+#view-route, #view-practice { max-width: 1180px; }
+#view-practice > p, #view-practice > .prob, #view-practice > .prob-out,
+#view-practice > .callout, #view-practice > details { max-width: 920px; }
+
+/* ---- 共通：ステップの中身 ---- */
+.route-grid { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.route-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.step-do-box { background: var(--accent-soft); border-radius: 8px; padding: 12px 14px; }
+.step-do-box .step-k { color: var(--accent); }
+.step-do { font-size: 1.12rem; font-weight: 500; line-height: 1.8; }
+.step-use { gap: 5px; }
+.chips { gap: 6px; }
+.chip { flex-direction: row; align-items: baseline; flex-wrap: wrap; gap: 0 8px; padding: 4px 10px; font-size: 0.86rem; text-decoration: none; min-height: 34px; }
+.chip span { text-decoration: underline; text-underline-offset: 3px; }
+.chip small { font-size: 0.72rem; font-weight: 700; color: var(--sub); letter-spacing: 0.04em; }
+.moves { gap: 0; border-top: 1px solid var(--line); }
+.moves li {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 3px 10px;
+  padding: 7px 0; border-bottom: 1px solid var(--line);
+}
+.moves .mv-path { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 5px; flex: none; max-width: 100%; }
+.moves .mv-card { font-weight: 700; font-size: 0.98rem; line-height: 1.5; min-width: 0; }
+.moves .mv-tag { font-weight: 400; }
+.moves .zb { font-size: 0.78rem; min-height: 1.8em; padding: 2px 6px; }
+.z-note { color: var(--deck); background: var(--deck-bg); }
+
+/* ---- 共通：状態（手札／場／墓地・除外） ---- */
+.fold > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
+.sum-counts { font-size: 0.85rem; font-weight: 500; color: var(--sub); font-variant-numeric: tabular-nums; }
+.state { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.sz-hand, .sz-field, .state-legend { grid-column: 1 / -1; }
+.sz { padding: 8px 9px; }
+.sz h4 { margin-bottom: 5px; font-size: 0.95rem; }
+.sz .sz-n { margin-left: auto; font-size: 0.8rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.sz-sub { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; margin: 6px 0 3px; }
+.sz-sub:first-of-type { margin-top: 0; }
+.sz ul { gap: 5px; }
+.sz li { font-size: 0.88rem; padding: 3px 8px; overflow-wrap: anywhere; }
+.sz li .ref { padding: 0; }
+.sz li .dot { font-size: 0.7em; margin-right: 3px; vertical-align: 0.15em; }
+.sz-hand { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.sz-hand h4 { margin: 0; }
+.sz-hand .sz-n { margin-left: 6px; }
+.sz-gy ul, .sz-ban ul { flex-direction: column; align-items: stretch; }
+
+/* ---- スマホ ---- */
+@media (max-width: 519px) {
+  .brand-sub { display: none; }
+  .site-head-in { padding-block: 8px; }
+  .wrap { padding-block: 14px 8px; }
+  .route-head { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+  .route-title { font-size: 1.05rem; order: -1; flex: 1 1 100%; }
+  .back-link { padding: 2px 0; font-size: 0.85rem; }
+  .step { padding: 14px 12px; gap: 12px; }
+  .step-title { font-size: 1.2rem; }
+  .stepnav { grid-template-columns: 1fr auto 1.7fr; }
+  .stepnav #btn-reset { font-size: 0.82rem; padding-inline: 8px; }
+  .fold-body { padding: 10px; }
+}
+
+/* ---- タブレット（iPad Pro 縦・横）と広い画面 ---- */
+@media (min-width: 760px) {
+  .tabs a { height: 48px; padding: 0 16px; }
+}
+@media (min-width: 800px) {
+  body { font-size: 18px; }
+  .page-title { font-size: 1.75rem; }
+  .route-grid {
+    display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    gap: 14px 24px; align-items: start;
+  }
+  .route-grid > .step { grid-column: 1; grid-row: 1; padding: 20px; }
+  .route-grid > .stepnav { grid-column: 1; grid-row: 2; }
+  .route-side {
+    grid-column: 2; grid-row: 1 / span 2;
+    position: sticky; top: calc(env(safe-area-inset-top, 0px) + 80px);
+    max-height: calc(100vh - 96px); overflow-y: auto; overscroll-behavior: contain;
+  }
+  .step-title { font-size: 1.4rem; }
+  .step-do { font-size: 1.15rem; }
+  .stepnav .btn { min-height: 56px; font-size: 1.05rem; }
+
+  .quiz-grid {
+    display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    gap: 12px 24px; align-items: start;
+  }
+  .quiz-top { grid-column: 1; grid-row: 1; }
+  .quiz-body { grid-column: 1; grid-row: 2; }
+  .quiz-side {
+    grid-column: 2; grid-row: 1 / span 2;
+    position: sticky; top: calc(env(safe-area-inset-top, 0px) + 80px);
+    max-height: calc(100vh - 96px); overflow-y: auto; overscroll-behavior: contain;
+  }
+  .quiz-opt { min-height: 64px; font-size: 1.05rem; }
+
+  .routes { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
+  .route-card { align-content: start; }
+  .board { grid-template-columns: 1.5fr 1fr 1fr; align-items: start; }
+  .cases { grid-template-columns: 1fr 1fr; align-items: start; }
+  .checks { gap: 10px; }
+}
+.quiz-grid, .quiz-top, .quiz-body { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.quiz-side { min-width: 0; }
+@media (min-width: 800px) { .quiz-grid { display: grid; } }
+@media (min-width: 960px) {
+  .keycards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .tools { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .gloss { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* スマホでは「操作」を使うカードより先に見せる */
+@media (max-width: 519px) {
+  .step > .step-title { order: -2; }
+  .step > .step-do-box { order: -1; }
+}
+.sz li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 3px; }
+.sz li .dot { flex: none; margin-right: 0; }
+.sz li .ref { flex: 0 1 auto; min-width: 0; text-align: left; }
+.sz li small { flex-basis: 100%; }
+.sz li.none { display: block; }

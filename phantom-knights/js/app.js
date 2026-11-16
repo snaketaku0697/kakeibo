@@ -49,6 +49,7 @@
   /* ---------- 説明シート ---------- */
   var sheetStack = [];
   var lastFocus = null;
+  var KIND_SHORT = { main: 'モンスター', trap: '罠', spell: '魔法', xyz: 'エクシーズ', link: 'リンク' };
   var KIND = { main: 'モンスター（メインデッキ）', trap: '罠カード', spell: '魔法カード', xyz: 'エクシーズモンスター（EXデッキ）', link: 'リンクモンスター（EXデッキ）' };
 
   var ARROW = { '↖': [0, '左上'], '⬆': [1, '上'], '↗': [2, '右上'], '⬅': [3, '左'], '➡': [5, '右'], '↙': [6, '左下'], '⬇': [7, '下'], '↘': [8, '右下'] };
@@ -164,16 +165,23 @@
     return { z: z, tags: tags, fresh: fresh };
   }
 
+  function stateCounts(route, n) {
+    var z = stateAt(route, n).z;
+    return '場 ' + (z.field.length + z.st.length) + '・墓地 ' + z.gy.length + '・除外 ' + z.ban.length;
+  }
   function stateHtml(route, n) {
     var st = stateAt(route, n);
     function item(id, extra) {
       var tag = st.tags[id];
-      return '<li' + (st.fresh[id] ? ' class="new"' : '') + '>' + (st.fresh[id] ? '<span aria-hidden="true">● </span>' : '') +
+      return '<li' + (st.fresh[id] ? ' class="new"' : '') + '>' + (st.fresh[id] ? '<span class="dot" aria-hidden="true">●</span>' : '') +
         cardBtn(id, 'ref ref-c', shortName(id)) +
         (tag ? '<small>' + esc(tag) + '</small>' : '') + (extra || '') + '</li>';
     }
     function list(ids, mapper) {
       return ids.length ? '<ul>' + ids.map(mapper || function (id) { return item(id); }).join('') + '</ul>' : '<ul><li class="none">なし</li></ul>';
+    }
+    function head(cls, mark, label, count) {
+      return '<h4><span class="zb ' + cls + '">' + mark + '</span>' + label + '<span class="sz-n">' + count + '枚</span></h4>';
     }
     var fieldList = list(st.z.field, function (id) {
       var mats = st.z['mat:' + id] || [];
@@ -181,12 +189,13 @@
       return item(id, extra);
     });
     return '<div class="state">' +
-      '<div class="sz z-hand"><h4><span class="zb z-hand">手</span>手札</h4>' + list(st.z.hand) + '</div>' +
-      '<div class="sz z-field"><h4><span class="zb z-field">場</span>場のモンスター</h4>' + fieldList + '</div>' +
-      '<div class="sz z-st"><h4><span class="zb z-st">場</span>場の魔法・罠</h4>' + list(st.z.st) + '</div>' +
-      '<div class="sz z-gy"><h4><span class="zb z-gy">墓</span>墓地</h4>' + list(st.z.gy) + '</div>' +
-      '<div class="sz z-ban"><h4><span class="zb z-ban">除</span>除外</h4>' + list(st.z.ban) + '</div>' +
-      '<p class="state-legend">● は、この操作で動いたカードです。エクシーズモンスターの下にあるカードは「素材」として表示しています。</p>' +
+      '<div class="sz z-hand sz-hand">' + head('z-hand', '手', '手札', st.z.hand.length) + list(st.z.hand) + '</div>' +
+      '<div class="sz z-field sz-field">' + head('z-field', '場', '場', st.z.field.length + st.z.st.length) +
+        '<p class="sz-sub">モンスター</p>' + fieldList +
+        '<p class="sz-sub">魔法・罠</p>' + list(st.z.st) + '</div>' +
+      '<div class="sz z-gy sz-gy">' + head('z-gy', '墓', '墓地', st.z.gy.length) + list(st.z.gy) + '</div>' +
+      '<div class="sz z-ban sz-ban">' + head('z-ban', '除', '除外', st.z.ban.length) + list(st.z.ban) + '</div>' +
+      '<p class="state-legend">● は直前の操作で動いたカード。エクシーズモンスターの下のカードは「素材」と表示しています。</p>' +
       '</div>';
   }
 
@@ -204,22 +213,39 @@
     }
     var s = route.steps[idx];
     var h = '<h2 class="step-title">' + esc(s.title) + '</h2>';
-    h += '<div class="step-sec"><p class="step-k">使うカード</p><ul class="chips">' +
-      s.use.map(function (u) { return '<li>' + cardBtn(u, 'chip') + '</li>'; }).join('') + '</ul></div>';
-    h += '<div class="step-sec"><p class="step-k">操作</p><p class="step-do">' + rich(s.do) + '</p></div>';
-    h += '<div class="step-sec"><p class="step-k">理由</p><p>' + rich(s.why) + '</p></div>';
+    h += '<div class="step-sec step-use"><p class="step-k">使うカード</p><ul class="chips">' +
+      s.use.map(function (u) {
+        return '<li><button type="button" class="chip" data-card="' + baseId(u) + '"><span>' + esc(fullName(u)) + '</span><small>' + KIND_SHORT[cardOf(u).kind] + '</small></button></li>';
+      }).join('') + '</ul></div>';
+    h += '<div class="step-sec step-do-box"><p class="step-k">操作</p><p class="step-do">' + rich(s.do) + '</p></div>';
 
-    var lines = s.moves.map(function (m) {
-      return '<li>' + zoneBadge(m[1]) + '<span class="arrow" aria-label="から">→</span>' + zoneBadge(m[2]) +
-        '<span class="mv-card">' + esc(shortName(m[0])) + '</span></li>';
+    /* 同じ「どこから → どこへ」の移動は1行にまとめる */
+    var groups = [], index = {};
+    s.moves.forEach(function (m) {
+      var key = m[1] + '>' + m[2];
+      if (index[key] === undefined) { index[key] = groups.length; groups.push({ from: m[1], to: m[2], cards: [] }); }
+      groups[index[key]].cards.push(shortName(m[0]));
+    });
+    /* 重ね直し（ランクアップ）で素材ごと移るカードは、持ち主の行にまとめて書く */
+    groups.forEach(function (g) {
+      if (!g.from || g.from.indexOf('mat:') !== 0 || g.to.indexOf('mat:') !== 0) return;
+      var holder = shortName(g.from.slice(4));
+      groups.forEach(function (o) {
+        if (o !== g && o.to === g.to && o.cards.indexOf(holder) > -1) { o.along = g.cards; g.hidden = true; }
+      });
+    });
+    var lines = groups.filter(function (g) { return !g.hidden; }).map(function (g) {
+      return '<li><span class="mv-path">' + zoneBadge(g.from) + '<span class="arrow" aria-label="から">→</span>' + zoneBadge(g.to) +
+        '</span><span class="mv-card">' + esc(g.cards.join('、')) +
+        (g.along ? '<span class="mv-tag">（下にあった素材の ' + esc(g.along.join('、')) + ' も一緒に）</span>' : '') + '</span></li>';
     });
     Object.keys(s.tags || {}).forEach(function (k) {
-      var moved = s.moves.some(function (m) { return m[0] === k; });
-      lines.push('<li><span class="zb z-field">' + (moved ? '状態' : '場のまま') + '</span><span class="mv-card">' + esc(shortName(k)) + '</span>：' + esc(s.tags[k]) + '</li>');
+      lines.push('<li><span class="mv-path"><span class="zb z-note">状態</span></span><span class="mv-card">' + esc(shortName(k)) + '<span class="mv-tag">：' + esc(s.tags[k]) + '</span></span></li>');
     });
     h += '<div class="step-sec"><p class="step-k">操作後の変化</p><ul class="moves">' + lines.join('') + '</ul></div>';
 
     if (s.pit) h += '<div class="callout c-warn"><strong>間違えやすい点</strong>' + rich(s.pit) + '</div>';
+    h += '<div class="step-sec"><p class="step-k">理由</p><p>' + rich(s.why) + '</p></div>';
     if (s.note) h += '<div class="callout c-note">' + rich(s.note) + '</div>';
     if (s.verify) h += '<div class="callout c-verify"><strong>要確認（文字起こしだけでは確定できない点）</strong>' + rich(s.verify) + '</div>';
     h += '<a class="vjump" href="' + videoUrl(s.t) + '" target="_blank" rel="noopener">動画の ' + fmtTime(s.t) + ' で確認する</a>';
@@ -252,6 +278,7 @@
     $('progress-bar').setAttribute('aria-label', '進行状況');
     $('step').innerHTML = stepHtml(r, idx);
     $('state').innerHTML = stateHtml(r, done ? total : idx + 1);
+    $('state-counts').textContent = stateCounts(r, done ? total : idx + 1);
     $('steplist').innerHTML = stepListHtml(r, idx);
     $('btn-prev').disabled = idx === 0;
     $('btn-reset').disabled = idx === 0;
@@ -259,7 +286,7 @@
     $('btn-next').textContent = done ? '完成' : (idx === total - 1 ? '次へ（完成）' : '次へ');
     store('pk_step_' + r.id, String(idx));
     if (focusStep) {
-      var top = $('progress').getBoundingClientRect().top + window.pageYOffset - 76;
+      var top = $('progress').getBoundingClientRect().top + window.pageYOffset - document.querySelector('.site-head').offsetHeight - 12;
       window.scrollTo(0, Math.max(0, top));
       $('step').focus({ preventScroll: true });
     }
@@ -394,9 +421,10 @@
       : '直前の操作：' + r.steps[i - 1].title;
     var h = '<div class="quiz-head"><b>' + esc(r.name) + '</b><span>第 ' + (i + 1) + ' 問 / ' + total + '　正解 ' + quiz.score + '</span></div>' +
       '<div class="progress-bar" role="progressbar" aria-label="クイズの進み具合" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + (i + 1) + '"><span style="width:' + Math.round((i + 1) / total * 100) + '%"></span></div>' +
-      '<p class="quiz-before">' + esc(before) + '</p>' +
-      '<details class="fold" open><summary>今の場・墓地・除外</summary><div class="fold-body">' + stateHtml(r, i) + '</div></details>' +
-      '<p class="quiz-q" id="quiz-q" tabindex="-1">動画の手順では、次の一手はどれ？</p><div class="quiz-opts">';
+      '<p class="quiz-before">' + esc(before) + '</p>';
+    h = '<div class="quiz-grid"><div class="quiz-top">' + h + '</div>' +
+      '<aside class="quiz-side" aria-label="今の状態"><details class="fold" open><summary><span>今の状態</span><span class="sum-counts">' + stateCounts(r, i) + '</span></summary><div class="fold-body">' + stateHtml(r, i) + '</div></details></aside>' +
+      '<div class="quiz-body"><p class="quiz-q" id="quiz-q" tabindex="-1">動画の手順では、次の一手はどれ？</p><div class="quiz-opts">';
     quiz.opts.forEach(function (t, k) {
       var cls = 'quiz-opt', mark = '';
       if (answered) {
@@ -417,7 +445,7 @@
     }
     h += '<div class="quiz-nav' + (answered ? '' : ' is-static') + '"><button type="button" class="btn btn-ghost" data-quiz-quit>やめる</button>' +
       (answered ? '<button type="button" class="btn btn-primary" data-quiz-next>' + (i === total - 1 ? '結果を見る' : '次の問題へ') + '</button>' : '') + '</div>';
-    return h;
+    return h + '</div></div>';
   }
   function quizResultHtml() {
     var r = quiz.route, total = r.steps.length;
@@ -437,7 +465,7 @@
     var el = $('quiz');
     el.innerHTML = !quiz ? quizSetupHtml() : (quiz.i >= quiz.route.steps.length ? quizResultHtml() : quizQuestionHtml());
     if (focus) {
-      var top = el.getBoundingClientRect().top + window.pageYOffset - 130;
+      var top = el.getBoundingClientRect().top + window.pageYOffset - document.querySelector('.site-head').offsetHeight - 64;
       var target = $('quiz-fb') || $('quiz-q');
       if (quiz && quiz.picked === null) window.scrollTo(0, Math.max(0, top));
       if (target) target.focus({ preventScroll: quiz && quiz.picked === null });
