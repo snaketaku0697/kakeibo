@@ -23,6 +23,7 @@
       <a href="#guide" data-tab="guide">展開</a>
       <a href="#defense" data-tab="defense">妨害</a>
       <a href="#notes" data-tab="notes">注意点</a>
+      <a href="#practice" data-tab="practice">練習</a>
       <a href="#glossary" data-tab="glossary">用語</a>
     </nav>
   </div>
@@ -74,7 +75,7 @@
       <h3><span class="zb">場</span>モンスター</h3>
       <ul>
         <li>{c:requiem}<span>相手のモンスター効果を無効にして破壊。素材の数（3回）まで。</span></li>
-        <li>{c:bardiche}<span>自分のリンク先に闇属性エクシーズが出るたび、カードを1枚破壊。攻撃力2900。</span></li>
+        <li>{c:bardiche}<span>自分のリンク先に闇属性エクシーズが出たとき、カードを1枚破壊できる（1ターンに1度）。攻撃力2900。</span></li>
         <li>{c:robe} ともう1体<span>どちらもレベル4。相手ターンに{c:shiten}の素材になる。</span></li>
       </ul>
     </div>
@@ -99,7 +100,7 @@
       <ul>
         <li>投稿者は、3つあるレンタルデッキの中で「いちばん回しやすくて強い」と評価しています（<a class="vlink" data-t="48" href="#">0:48</a>）。</li>
         <li>{t:shodo}になるカードが多く入っていて、1枚から最終盤面まで進めます。</li>
-        <li>「禁じられた一滴」が入っていて、先攻でも後攻でも強く使えると紹介されています。{t:gote}にも向いています（<a class="vlink" data-t="93" href="#">1:33</a>）。</li>
+        <li>{c:droplet}が入っていて、先攻でも後攻でも強く使えると紹介されています。{t:gote}にも向いています（<a class="vlink" data-t="93" href="#">1:33</a>）。</li>
         <li>苦手：魔法カードを止める手段がほとんどありません。魔法を何枚も使うデッキは苦手です（<a class="vlink" data-t="467" href="#">7:47</a>）。</li>
       </ul>
     </div>
@@ -112,7 +113,8 @@
         <li>手順は元動画の文字起こしをもとにしています。対戦の再現ではなく、展開を理解するための学習ガイドです。</li>
         <li>文字起こしだけでは確定できない操作には、そのステップに<strong class="tag-verify">要確認</strong>の表示を付けています。動画の画面で確認してください。</li>
         <li>動画の口頭説明にはなく、カードの効果から補った注意には「カードテキストにもとづく補足」と書いています。</li>
-        <li>新しいカード（ディケイクローク、ドゥームソルレット、アンブレイジベイル、マレヴォレンスサイス、RUM－幻影騎士団レクイエム、四天の龍、カルマエル、ダーク・レクイエム）の効果は、公式カードデータベースの掲載内容を検索結果経由で確認しました。その他のカードは効果の要約です。カード詳細から公式データベースを開けます。</li>
+        <li>カード22枚の名前・種類・レベル・攻守・リンクマーカーは、公開されているカードデータベース（yaml-yugi、2026年11月16日時点）と機械的に照合しています。効果の要約も、同じデータベースの日本語テキストと読み比べて直しました。魔解騎士シャーマナイトだけは日本語テキストが未登録だったため、英語テキストと照合しています。</li>
+        <li>公式カードデータベースそのものは直接確認できていません。カード詳細から公式データベースを開けるので、正確な文章はそちらで確認してください。</li>
         <li>レンタルデッキの正確な枚数や全カードの一覧は確認できていません。動画では、増援・おろかな埋葬などから始める展開は扱わず、動画のコメント欄で案内するとしています（<a class="vlink" data-t="1232" href="#">20:32</a>）。</li>
       </ul>
       <h4>文字起こしの聞き間違いと正しい名前</h4>
@@ -132,7 +134,7 @@
             <tr><td>ベルズオピオン</td><td>{c:ophion|ヴェルズ・オピオン}</td></tr>
             <tr><td>カルマイル／カルマル／カルマレ</td><td>{c:karmael|エクソシスター・カルマエル}</td></tr>
             <tr><td>ステンドグレイブ</td><td>{c:greaves|幻影騎士団ステンドグリーブ}</td></tr>
-            <tr><td>禁じられた一雫</td><td>禁じられた一滴</td></tr>
+            <tr><td>禁じられた一雫</td><td>{c:droplet|禁じられた一滴}（読みは「ひとしずく」）</td></tr>
           </tbody>
         </table>
       </div>
@@ -203,8 +205,8 @@
     </div>
     <div class="tool">
       <h3>{c:bardiche}</h3>
-      <p class="tool-where"><span class="zb z-field">場</span>条件を満たすたび</p>
-      <p>自分の{t:linkzone}に闇属性エクシーズが出ると、<strong>カードを1枚破壊</strong>します。</p>
+      <p class="tool-where"><span class="zb z-field">場</span>1ターンに1度</p>
+      <p>自分の{t:linkzone}に闇属性エクシーズが出たとき、<strong>カードを1枚破壊</strong>できます。</p>
     </div>
   </div>
 
@@ -213,7 +215,7 @@
     <div class="case">
       <p class="case-if">相手がモンスターの効果を発動した</p>
       <p class="case-then">{c:requiem}で無効にして破壊する。</p>
-      <p class="case-more">止めたあと、{t:gy}のエクシーズモンスターを{c:bardiche}のリンク先に戻せば、もう1枚破壊できます。</p>
+      <p class="case-more">止めたあと、{t:gy}のエクシーズモンスターを{c:bardiche}のリンク先に戻せば、もう1枚破壊できます（{c:bardiche}の破壊をそのターンにまだ使っていない場合）。</p>
     </div>
     <div class="case">
       <p class="case-if">止めたいモンスターが、もう場に出ている</p>
@@ -223,7 +225,7 @@
     <div class="case">
       <p class="case-if">相手の場のカードを破壊したい</p>
       <p class="case-then">{c:veil}の墓地効果で{c:shiten}を出す。</p>
-      <p class="case-more">{c:bardiche}のリンク先に出せば、合わせて2枚破壊できます。</p>
+      <p class="case-more">{c:bardiche}のリンク先に出せば、{c:bardiche}の破壊と合わせて2枚破壊できます。</p>
     </div>
     <div class="case">
       <p class="case-if">相手がレベル5以上のモンスターを出して戦うデッキ</p>
@@ -262,12 +264,12 @@
         <li>相手のモンスター効果を{c:requiem}で無効にして破壊します。</li>
         <li>「その後、墓地のエクシーズモンスターを特殊召喚できる」の部分で、{t:gy}の{c:breaksword}か{c:scythe}を選びます。</li>
         <li>置く場所を{c:bardiche}の{t:linkzone}にします。</li>
-        <li>{c:bardiche}の効果が発動し、場のカードを1枚破壊します。</li>
+        <li>{c:bardiche}の効果を発動し、場のカードを1枚破壊します。</li>
       </ol>
       <p>1回の無効が「無効＋破壊」になります。動画では「できればこうしたほうが、妨害の数としては美しい」と説明されています（<a class="vlink" data-t="559" href="#">9:19</a>）。</p>
       <div class="callout c-note">
         <strong>カードテキストにもとづく補足</strong>
-        {c:bardiche}の破壊効果は、条件を満たすと必ず発動します。相手の場に破壊したいカードがないときにリンク先へ出すと、自分のカードを選ぶことになります。動画の口頭説明にはない点です。
+        {c:bardiche}の破壊効果は1ターンに1度です。同じターンに{c:shiten}を出したときに使ったら、{c:requiem}で戻したモンスターではもう使えません。どちらで使うかを選びます。動画の口頭説明にはない点です。
       </div>
     </div>
   </details>
@@ -279,7 +281,7 @@
         <li>相手ターンに、{t:gy}の{c:veil}を{t:banish}して効果を発動します。</li>
         <li>場のレベル4の2体（{c:breaksword}の効果で戻した{c:robe}ともう1体）を重ねて、{c:shiten}を{t:xyz}します。</li>
         <li>{c:shiten}が出たときの効果で、自分の場のカードと相手の場のカードを同じ数ずつ選んで破壊します。</li>
-        <li>{c:bardiche}の{t:linkzone}に出していれば、{c:bardiche}の効果でもう1枚破壊します。動画では「これでまず2破壊」と説明されています（<a class="vlink" data-t="522" href="#">8:42</a>）。</li>
+        <li>{c:bardiche}の{t:linkzone}に出していれば、{c:bardiche}の効果でもう1枚破壊できます。動画では「これでまず2破壊」と説明されています（<a class="vlink" data-t="522" href="#">8:42</a>）。</li>
         <li>このあと相手が何か効果を発動したら、{c:shiten}の{t:material}を1つ取り除いて、{c:ophion}か{c:karmael}を上に重ねます。</li>
       </ol>
       <div class="callout c-verify">
@@ -395,11 +397,18 @@
   <ul class="checks rich">
     <li><strong>{c:cherubini}の{t:linkzone}を使う。</strong>リンク先のモンスターは効果で破壊されません。動画では{c:scythe}、{c:shamanite}、通常召喚する{c:decay}をリンク先に置いています（<a class="vlink" data-t="693" href="#">動画 11:33</a>）。</li>
     <li><strong>{c:breaksword}は必ず{c:bardiche}のリンク先。</strong>リンク先に出さないと{c:bardiche}の破壊効果が発動せず、仲間を戻せません（<a class="vlink" data-t="872" href="#">動画 14:32</a>）。</li>
-    <li><strong>相手ターンも{c:bardiche}のリンク先。</strong>{c:shiten}や、{c:requiem}で戻すエクシーズモンスターをリンク先に出すと、破壊が1回増えます。</li>
+    <li><strong>相手ターンも{c:bardiche}のリンク先。</strong>{c:shiten}や、{c:requiem}で戻すエクシーズモンスターをリンク先に出すと、{c:bardiche}の破壊効果を使えます。</li>
   </ul>
+  <figure class="zonefig">
+    <div class="zonegrid" role="img" aria-label="EXモンスターゾーンのリンクモンスターから見て、左下と右下のモンスターゾーンがリンク先">
+      <span class="zg-empty"></span><span class="zg-ex">EXモンスターゾーン<b>ケルビーニ／バルディッシュ</b><i>↙　↘</i></span><span class="zg-empty"></span><span class="zg-ex zg-dim">EXモンスターゾーン</span><span class="zg-empty"></span>
+      <span class="zg-link">リンク先</span><span class="zg-zone">モンスターゾーン</span><span class="zg-link">リンク先</span><span class="zg-zone">モンスターゾーン</span><span class="zg-zone">モンスターゾーン</span>
+    </div>
+    <figcaption>左側のEXモンスターゾーンに出した場合の図です。ケルビーニもバルディッシュも左下と右下を指します。バルディッシュの右向きの矢印は、EXモンスターゾーンにいるあいだはどのゾーンも指しません。</figcaption>
+  </figure>
   <div class="callout c-note rich">
     <strong>カードテキストにもとづく補足</strong>
-    ルート3は{c:bardiche}が先に場にいます。そのあとに出す{c:shamanite}や{c:rebellion}をリンク先に置くと、破壊効果が発動してしまいます。リンク先に置くのは{c:breaksword}だけにします。動画の口頭説明にはない点です。
+    {c:bardiche}の破壊効果は1ターンに1度です。ルート3は{c:bardiche}が先に場にいますが、破壊効果は{c:breaksword}を出すときまで使わずに取っておきます。動画の口頭説明にはない点です。
   </div>
 
   <h2>4. ダスティローブの効果を使うタイミング</h2>
@@ -418,6 +427,61 @@
     <li><strong>レクイエムは2種類。</strong>モンスターが{c:requiem}、魔法カードが{c:rum}です。</li>
     <li><strong>{c:fog}は2回出てくる。</strong>展開の途中で墓地から使う1枚と、最後に場にセットする1枚は別のカードです。</li>
   </ul>
+</section>
+
+<!-- ================= 練習 ================= -->
+<section class="view" id="view-practice" data-view="practice" hidden>
+  <h1 class="page-title">練習と確率</h1>
+  <p class="lead">手順を見ずに次の一手を選ぶクイズと、最初の手札に初動が来る確率の計算です。</p>
+
+  <h2>クイズ：次の一手は？</h2>
+  <div class="quiz" id="quiz"></div>
+
+  <h2>初動が最初の手札に来る確率</h2>
+  <p class="rich">3つの{t:shodo}のうち、どれか1枚でも最初の手札に来る確率を計算します。枚数を変えると、すぐに計算し直します。</p>
+  <form class="prob" id="prob-form" novalidate>
+    <div class="prob-row">
+      <label for="p-deck">デッキの枚数</label>
+      <div class="numbox"><button type="button" class="btn btn-small" data-step="-1" data-for="p-deck" aria-label="デッキの枚数を1減らす">−</button><input type="number" id="p-deck" inputmode="numeric" min="40" max="60" value="40"><button type="button" class="btn btn-small" data-step="1" data-for="p-deck" aria-label="デッキの枚数を1増やす">＋</button></div>
+      <p class="prob-note">仮の値です（40〜60枚）。</p>
+    </div>
+    <div class="prob-row">
+      <label for="p-decay">幻影騎士団ディケイクローク</label>
+      <div class="numbox"><button type="button" class="btn btn-small" data-step="-1" data-for="p-decay" aria-label="ディケイクロークを1枚減らす">−</button><input type="number" id="p-decay" inputmode="numeric" min="0" max="3" value="3"><button type="button" class="btn btn-small" data-step="1" data-for="p-decay" aria-label="ディケイクロークを1枚増やす">＋</button></div>
+      <p class="prob-note">動画で「3枚入っている」と話しています。</p>
+    </div>
+    <div class="prob-row">
+      <label for="p-solleret">幻影騎士団ドゥームソルレット</label>
+      <div class="numbox"><button type="button" class="btn btn-small" data-step="-1" data-for="p-solleret" aria-label="ドゥームソルレットを1枚減らす">−</button><input type="number" id="p-solleret" inputmode="numeric" min="0" max="3" value="3"><button type="button" class="btn btn-small" data-step="1" data-for="p-solleret" aria-label="ドゥームソルレットを1枚増やす">＋</button></div>
+      <p class="prob-note">仮の値です。動画では枚数を話していません。</p>
+    </div>
+    <div class="prob-row">
+      <label for="p-scales">幻影騎士団ティアースケイル</label>
+      <div class="numbox"><button type="button" class="btn btn-small" data-step="-1" data-for="p-scales" aria-label="ティアースケイルを1枚減らす">−</button><input type="number" id="p-scales" inputmode="numeric" min="0" max="3" value="3"><button type="button" class="btn btn-small" data-step="1" data-for="p-scales" aria-label="ティアースケイルを1枚増やす">＋</button></div>
+      <p class="prob-note">仮の値です。動画では枚数を話していません。</p>
+    </div>
+    <div class="prob-row">
+      <label for="p-other">その他の初動（増援・おろかな埋葬など）</label>
+      <div class="numbox"><button type="button" class="btn btn-small" data-step="-1" data-for="p-other" aria-label="その他の初動を1枚減らす">−</button><input type="number" id="p-other" inputmode="numeric" min="0" max="20" value="0"><button type="button" class="btn btn-small" data-step="1" data-for="p-other" aria-label="その他の初動を1枚増やす">＋</button></div>
+      <p class="prob-note">このガイドに手順はありません。含めて計算したいときだけ入れます。</p>
+    </div>
+  </form>
+  <div class="callout c-verify">
+    <strong>枚数はゲーム内で確認してください</strong>
+    レンタルデッキの正確な枚数は確認できていません。ゲーム内のデッキ画面を見て、上の数字を直してから結果を読んでください。
+  </div>
+  <div class="prob-out" id="prob-out" aria-live="polite"></div>
+  <details class="fold">
+    <summary>計算のしかた</summary>
+    <div class="fold-body rich">
+      <ul>
+        <li>「初動が1枚も来ない確率」を求めて、100%から引いています。デッキから初動以外のカードだけを引き続ける確率です。</li>
+        <li>先攻は最初の手札5枚、後攻は最初のドローを含めた6枚で計算しています。</li>
+        <li>{c:scales}は捨てる手札がもう1枚必要ですが、手札は5枚以上あるので、ここでは1枚あれば始められるものとして数えています。</li>
+        <li>相手の{t:handtrap}で止められる場合は考えていません。</li>
+      </ul>
+    </div>
+  </details>
 </section>
 
 <!-- ================= 用語・カード ================= -->

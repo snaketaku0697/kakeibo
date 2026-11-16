@@ -51,6 +51,18 @@
   var lastFocus = null;
   var KIND = { main: 'モンスター（メインデッキ）', trap: '罠カード', spell: '魔法カード', xyz: 'エクシーズモンスター（EXデッキ）', link: 'リンクモンスター（EXデッキ）' };
 
+  var ARROW = { '↖': [0, '左上'], '⬆': [1, '上'], '↗': [2, '右上'], '⬅': [3, '左'], '➡': [5, '右'], '↙': [6, '左下'], '⬇': [7, '下'], '↘': [8, '右下'] };
+  var ARROW_CHAR = ['↖', '↑', '↗', '←', '', '→', '↙', '↓', '↘'];
+  function arrowGrid(arrows) {
+    var on = {};
+    var names = arrows.map(function (a) { on[ARROW[a][0]] = true; return ARROW[a][1]; });
+    var cells = '';
+    for (var i = 0; i < 9; i++) {
+      cells += i === 4 ? '<span class="ag-card">カード</span>' : '<span class="' + (on[i] ? 'ag-on' : 'ag-off') + '">' + (on[i] ? ARROW_CHAR[i] : '') + '</span>';
+    }
+    return '<div class="arrowfig"><div class="arrowgrid" role="img" aria-label="リンクマーカーは' + names.join('・') + '">' + cells + '</div><p>' + names.join('・') + 'を指します。</p></div>';
+  }
+
   function sheetHtml(item) {
     if (item.type === 'term') {
       var t = D.terms[item.id];
@@ -68,9 +80,11 @@
       (c.alias ? '<p class="sheet-alias">' + c.alias.map(esc).join('／') + '</p>' : '') +
       '<h3>このデッキでの役割</h3><p>' + rich(c.role) + '</p>' +
       '<h3>効果（要約）</h3><ul class="sheet-list">' + c.effects.map(function (e) { return '<li>' + rich(e) + '</li>'; }).join('') + '</ul>';
+    if (c.arrows) h += '<h3>リンクマーカー（リンク先の向き）</h3>' + arrowGrid(c.arrows);
     if (c.tips) h += '<h3>覚えておくこと</h3><p>' + rich(c.tips) + '</p>';
-    h += '<p class="sheet-src">' +
-      (c.checked === 'db' ? '効果は公式カードデータベースの掲載内容をもとに要約しています。' : '効果は要約です。正確な文章は公式カードデータベースかゲーム内で確認してください。') +
+    h += '<p class="sheet-src">効果は要約です。' +
+      (c.checked === 'yy-en' ? 'カードデータベース（yaml-yugi）に日本語テキストが未登録のため、英語テキストと照合しています。' : 'カードデータベース（yaml-yugi）の日本語テキストと照合しています。') +
+      '正確な文章は公式カードデータベースかゲーム内で確認してください。' +
       ' <a href="' + esc(url) + '" target="_blank" rel="noopener">公式カードデータベースで見る</a></p>';
     return h;
   }
@@ -186,7 +200,7 @@
         '<h2 class="step-title">最終盤面ができました</h2>' +
         '<p class="step-do">' + rich(route.done.text) + '</p>' +
         '<a class="vjump" href="' + videoUrl(route.done.t) + '" target="_blank" rel="noopener">動画の ' + fmtTime(route.done.t) + ' で確認する</a>' +
-        '<div class="cta-row"><a class="btn btn-primary" href="#defense">相手ターンの止め方を見る</a><a class="btn" href="#notes">間違えやすい点を見直す</a></div>';
+        '<div class="cta-row"><a class="btn btn-primary" href="#defense">相手ターンの止め方を見る</a><a class="btn" href="#practice">クイズで練習する</a><a class="btn" href="#notes">間違えやすい点を見直す</a></div>';
     }
     var s = route.steps[idx];
     var h = '<h2 class="step-title">' + esc(s.title) + '</h2>';
@@ -332,8 +346,191 @@
   }
   $('q').addEventListener('input', renderGloss);
 
+  /* ---------- 練習：クイズ「次の一手は？」 ---------- */
+  var quiz = null; /* { route, i, score, miss, opts, picked } */
+
+  function shuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  /* 正解の手順と、近くの手順から選んだ別の3つを混ぜる */
+  function quizOptions(route, i) {
+    var right = route.steps[i].title;
+    var seen = {}; seen[right] = true;
+    var pool = [];
+    route.steps.map(function (s, j) { return j; })
+      .sort(function (a, b) { return Math.abs(a - i) - Math.abs(b - i); })
+      .forEach(function (j) {
+        var t = route.steps[j].title;
+        if (j !== i && !seen[t] && pool.length < 8) { seen[t] = true; pool.push(t); }
+      });
+    return shuffle(shuffle(pool).slice(0, 3).concat([right]));
+  }
+  function quizStart(routeId) {
+    var r = null;
+    D.routes.forEach(function (x) { if (x.id === routeId) r = x; });
+    quiz = { route: r, i: 0, score: 0, miss: [], opts: quizOptions(r, 0), picked: null };
+    renderQuiz(true);
+  }
+  function quizSetupHtml() {
+    return '<p>手札を選ぶと、状況だけを見て「次の一手」を4つの中から選ぶ問題が、最初の操作から順番に出ます。答えるたびに理由を確認できます。</p>' +
+      '<div class="routes">' + D.routes.map(function (r, n) {
+        var best = store('pk_quiz_' + r.id);
+        return '<button type="button" class="route-card" data-quiz="' + r.id + '">' +
+          '<span class="route-card-k">ルート' + (n + 1) + '</span>' +
+          '<span class="route-card-n">' + esc(r.name) + '</span>' +
+          '<span class="route-card-m"><span>全 ' + r.steps.length + ' 問</span>' + (best ? '<span>前回の結果：' + esc(best) + '</span>' : '') +
+          '<span class="route-card-go">クイズを始める</span></span></button>';
+      }).join('') + '</div>';
+  }
+  function quizQuestionHtml() {
+    var r = quiz.route, i = quiz.i, total = r.steps.length, s = r.steps[i];
+    var answered = quiz.picked !== null;
+    var before = i === 0
+      ? 'あなたのターンの始めです。手札は「' + r.hand.map(fullName).join('」と「') + '」です。'
+      : '直前の操作：' + r.steps[i - 1].title;
+    var h = '<div class="quiz-head"><b>' + esc(r.name) + '</b><span>第 ' + (i + 1) + ' 問 / ' + total + '　正解 ' + quiz.score + '</span></div>' +
+      '<div class="progress-bar" role="progressbar" aria-label="クイズの進み具合" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + (i + 1) + '"><span style="width:' + Math.round((i + 1) / total * 100) + '%"></span></div>' +
+      '<p class="quiz-before">' + esc(before) + '</p>' +
+      '<details class="fold" open><summary>今の場・墓地・除外</summary><div class="fold-body">' + stateHtml(r, i) + '</div></details>' +
+      '<p class="quiz-q" id="quiz-q" tabindex="-1">動画の手順では、次の一手はどれ？</p><div class="quiz-opts">';
+    quiz.opts.forEach(function (t, k) {
+      var cls = 'quiz-opt', mark = '';
+      if (answered) {
+        if (t === s.title) { cls += ' is-right'; mark = '<span class="quiz-mark">正解</span>'; }
+        else if (k === quiz.picked) { cls += ' is-wrong'; mark = '<span class="quiz-mark">不正解</span>'; }
+      }
+      h += '<button type="button" class="' + cls + '" data-opt="' + k + '"' + (answered ? ' disabled' : '') + '>' + mark + '<span>' + esc(t) + '</span></button>';
+    });
+    h += '</div>';
+    if (answered) {
+      var ok = quiz.opts[quiz.picked] === s.title;
+      h += '<div class="quiz-fb" id="quiz-fb" tabindex="-1"><p class="quiz-result ' + (ok ? 'is-right' : 'is-wrong') + '">' + (ok ? '正解です' : '不正解です。動画の手順では「' + esc(s.title) + '」') + '</p>' +
+        '<div class="step-sec"><p class="step-k">操作</p><p>' + rich(s.do) + '</p></div>' +
+        '<div class="step-sec"><p class="step-k">理由</p><p>' + rich(s.why) + '</p></div>' +
+        (s.pit ? '<div class="callout c-warn"><strong>間違えやすい点</strong>' + rich(s.pit) + '</div>' : '') +
+        (s.verify ? '<div class="callout c-verify"><strong>要確認（文字起こしだけでは確定できない点）</strong>' + rich(s.verify) + '</div>' : '') +
+        '</div>';
+    }
+    h += '<div class="quiz-nav' + (answered ? '' : ' is-static') + '"><button type="button" class="btn btn-ghost" data-quiz-quit>やめる</button>' +
+      (answered ? '<button type="button" class="btn btn-primary" data-quiz-next>' + (i === total - 1 ? '結果を見る' : '次の問題へ') + '</button>' : '') + '</div>';
+    return h;
+  }
+  function quizResultHtml() {
+    var r = quiz.route, total = r.steps.length;
+    var h = '<div class="quiz-head"><b>' + esc(r.name) + '</b><span>結果</span></div>' +
+      '<p class="quiz-score" id="quiz-q" tabindex="-1">' + total + ' 問中 ' + quiz.score + ' 問正解</p>';
+    if (quiz.miss.length) {
+      h += '<p>間違えた手順です。押すと、展開ガイドのそのステップを開きます。</p><ol class="sl">' + quiz.miss.map(function (j) {
+        return '<li><button type="button" data-review="' + j + '"><span class="n">' + (j + 1) + '</span><span>' + esc(r.steps[j].title) + '</span></button></li>';
+      }).join('') + '</ol>';
+    } else {
+      h += '<p>全問正解です。この手順は覚えられています。</p>';
+    }
+    h += '<div class="quiz-nav"><button type="button" class="btn" data-quiz-quit>手札を選び直す</button><button type="button" class="btn btn-primary" data-quiz="' + r.id + '">もう一度</button></div>';
+    return h;
+  }
+  function renderQuiz(focus) {
+    var el = $('quiz');
+    el.innerHTML = !quiz ? quizSetupHtml() : (quiz.i >= quiz.route.steps.length ? quizResultHtml() : quizQuestionHtml());
+    if (focus) {
+      var top = el.getBoundingClientRect().top + window.pageYOffset - 130;
+      var target = $('quiz-fb') || $('quiz-q');
+      if (quiz && quiz.picked === null) window.scrollTo(0, Math.max(0, top));
+      if (target) target.focus({ preventScroll: quiz && quiz.picked === null });
+    }
+  }
+  $('quiz').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.quiz) { quizStart(b.dataset.quiz); return; }
+    if (b.hasAttribute('data-quiz-quit')) { quiz = null; renderQuiz(true); return; }
+    if (!quiz) return;
+    if (b.dataset.opt !== undefined && quiz.picked === null) {
+      quiz.picked = parseInt(b.dataset.opt, 10);
+      if (quiz.opts[quiz.picked] === quiz.route.steps[quiz.i].title) quiz.score++; else quiz.miss.push(quiz.i);
+      renderQuiz(true);
+      return;
+    }
+    if (b.hasAttribute('data-quiz-next')) {
+      quiz.i++;
+      quiz.picked = null;
+      if (quiz.i < quiz.route.steps.length) quiz.opts = quizOptions(quiz.route, quiz.i);
+      else store('pk_quiz_' + quiz.route.id, quiz.route.steps.length + ' 問中 ' + quiz.score + ' 問正解');
+      renderQuiz(true);
+      return;
+    }
+    if (b.dataset.review !== undefined) {
+      store('pk_step_' + quiz.route.id, b.dataset.review);
+      window.location.hash = '#' + quiz.route.hash;
+    }
+  });
+
+  /* ---------- 練習：初動が来る確率 ---------- */
+  /* デッキ deck 枚のうち当たりが hit 枚あるとき、draw 枚引いて1枚以上当たる確率 */
+  function atLeastOne(deck, hit, draw) {
+    if (hit <= 0) return 0;
+    var miss = 1;
+    for (var i = 0; i < draw; i++) miss *= Math.max(0, deck - hit - i) / (deck - i);
+    return 1 - miss;
+  }
+  function pct(x) { return (Math.round(x * 1000) / 10).toFixed(1) + '%'; }
+  var PROB_FIELDS = [['p-decay', 'ディケイクローク'], ['p-solleret', 'ドゥームソルレット'], ['p-scales', 'ティアースケイル'], ['p-other', 'その他の初動']];
+  function renderProb() {
+    function val(id) {
+      var el = $(id), v = parseInt(el.value, 10);
+      if (isNaN(v)) return null;
+      return Math.max(parseInt(el.min, 10), Math.min(parseInt(el.max, 10), v));
+    }
+    var deck = val('p-deck');
+    var counts = PROB_FIELDS.map(function (f) { return val(f[0]); });
+    var out = $('prob-out');
+    if (deck === null || counts.indexOf(null) > -1) {
+      out.innerHTML = '<p class="callout c-warn">枚数が空のところがあります。数字を入れてください。</p>';
+      return;
+    }
+    var main = counts[0] + counts[1] + counts[2];
+    var all = main + counts[3];
+    if (all > deck) {
+      out.innerHTML = '<p class="callout c-warn">初動の合計（' + all + '枚）がデッキの枚数（' + deck + '枚）を超えています。数字を直してください。</p>';
+      return;
+    }
+    var first = atLeastOne(deck, all, 5), second = atLeastOne(deck, all, 6);
+    var rows = PROB_FIELDS.map(function (f, k) {
+      return counts[k] > 0 ? '<tr><td>' + f[1] + '（' + counts[k] + '枚）</td><td>' + pct(atLeastOne(deck, counts[k], 5)) + '</td><td>' + pct(atLeastOne(deck, counts[k], 6)) + '</td></tr>' : '';
+    }).join('');
+    var missOdds = first < 1 ? Math.round(1 / (1 - first)) : 0;
+    out.innerHTML =
+      '<div class="prob-big"><div><span class="prob-k">先攻（最初の手札5枚）</span><b>' + pct(first) + '</b></div>' +
+      '<div><span class="prob-k">後攻（最初のドローを含めて6枚）</span><b>' + pct(second) + '</b></div></div>' +
+      '<p>' + deck + '枚のデッキに初動が合計' + all + '枚入っているとき、どれか1枚以上が来る確率です。' +
+      (all === 0 ? '' : (missOdds >= 2 ? '先攻では、およそ' + missOdds + '回に1回は初動が1枚も来ません。' : '')) + '</p>' +
+      (rows ? '<div class="tablebox"><table><thead><tr><th>カードごとの確率</th><th>先攻（5枚）</th><th>後攻（6枚）</th></tr></thead><tbody>' + rows + '</tbody></table></div>' : '');
+  }
+  $('prob-form').addEventListener('input', renderProb);
+  $('prob-form').addEventListener('submit', function (e) { e.preventDefault(); });
+  $('prob-form').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-step]');
+    if (!b) return;
+    var el = $(b.dataset.for);
+    var v = parseInt(el.value, 10);
+    if (isNaN(v)) v = parseInt(el.min, 10);
+    el.value = Math.max(parseInt(el.min, 10), Math.min(parseInt(el.max, 10), v + parseInt(b.dataset.step, 10)));
+    renderProb();
+  });
+  $('prob-form').addEventListener('change', function (e) {
+    var el = e.target;
+    if (el.tagName !== 'INPUT') return;
+    var v = parseInt(el.value, 10);
+    if (!isNaN(v)) el.value = Math.max(parseInt(el.min, 10), Math.min(parseInt(el.max, 10), v));
+    renderProb();
+  });
+
   /* ---------- 画面の切り替え ---------- */
-  var VIEWS = ['start', 'guide', 'defense', 'notes', 'glossary'];
+  var VIEWS = ['start', 'guide', 'defense', 'notes', 'practice', 'glossary'];
   function show() {
     var name = (window.location.hash || '#start').slice(1);
     var route = null;
@@ -346,6 +543,7 @@
       if (a.dataset.tab === tab) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
     if (view === 'guide') renderRouteList();
+    if (view === 'practice') { quiz = null; renderQuiz(); renderProb(); }
     if (route) {
       var saved = parseInt(store('pk_step_' + route.id), 10);
       cur.route = route;
